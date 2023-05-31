@@ -12,7 +12,6 @@ class GameObject(pygame.sprite.Sprite):
         self.orientation = orientation
         self.__load_image(img_path)
 
-
     def __load_image(self, path):
         try:
             self.image = pygame.image.load(path).convert()
@@ -24,10 +23,20 @@ class GameObject(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.image, self.orientation)
         self.rect = self.image.get_rect()
 
-
     def update(self):
         self.rect.center = (self.x, self.y)
 
+    def add_position(self, x, y):
+        self.x = x
+        self.y = y
+
+    def change_orientation(self, new_orientation):
+        self.orientation = new_orientation
+        self.image = pygame.transform.rotate(self.image, self.orientation)
+        self.rect = self.image.get_rect()
+
+    def give_rect(self):
+        return self.rect
 
     def destroy(self):
         pass
@@ -36,8 +45,38 @@ class GameObject(pygame.sprite.Sprite):
 class Domino(GameObject):
     def __init__(self, vals:list, **kwargs):
         self.vals = vals
-        self.path = f"{vals[0]}-{vals[1]}.png"
+
+        if vals == [7, 7]:
+            self.path = "_.png"
+        else:
+            self.path = f"{vals[0]}-{vals[1]}.png"
+
         super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=0, **kwargs)
+
+    def add_position(self, x, y):
+        super().add_position(x, y)
+        self.position = [x, y]
+
+    def view_horizontal(self):
+        super().change_orientation(90)
+
+    def view_vertical(self):
+        super().change_orientation(0)
+
+    def change_orientation_vals(self):
+        super().change_orientation(180)
+
+    def click_me(self):
+        self.receive_rect()
+        mouse_position = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mouse_position):
+            return True
+        else:
+            return False
+        
+    def receive_rect(self):
+        rect = super().give_rect()
+        self.rect = rect
 
     def __repr__(self):
         return str(list(self.vals))
