@@ -1,6 +1,6 @@
 from pygame.sprite import Group as Layer
+from objects import Domino, Player
 from pygame.locals import *
-from objects import Domino
 import pygame
 import random
 import sys
@@ -17,7 +17,8 @@ pygame.display.set_caption('Dominó!')
 ICON = pygame.image.load("assets/Domino (icon).png").convert()
 pygame.display.set_icon(ICON)
 
-BACKGROUND = pygame.image.load("assets/Table.png").convert()
+PLAYERS_NUM = 2
+BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert()
 WINDOW.blit(BACKGROUND, (0, 0))
 
 OBJECTS = [Domino([3, 5], x=100, y=100)]
@@ -25,13 +26,43 @@ LAYERS = {0: Layer()}
 
 FPS = 60
 
+PLAYERS = [Player() for _ in range(PLAYERS_NUM)]
+
+class Table:
+    def __init__(self):
+        self.dominoes = []
+
+    def dominoes_distribution(self):
+        for i in range(7):
+            for j in range(i, 7):
+                self.dominoes.append(Domino((i, j)))
+
+        for player in PLAYERS:
+            for _ in range(7):
+                player.add_domino(self.draw_random())
+
+    def start_game(self):
+        self.dominoes_distribution()
+    
+    def draw_random(self):
+        return self.dominoes.pop(random.randint(0, len(self.dominoes)))
+    
+    def __repr__(self):
+        return str(self.dominoes)
+
 
 def awake():
     for object in OBJECTS:
         if object.layer not in LAYERS:
             LAYERS[object.layer] = Layer()
 
-        LAYERS[object.layer].add(object)    
+        LAYERS[object.layer].add(object)  
+
+    table = Table()
+    table.start_game()
+    
+    for player in PLAYERS:
+        print(player)
 
 
 def main():

@@ -1,7 +1,6 @@
 import pygame
 import os
 
-
 class GameObject(pygame.sprite.Sprite):
     def __init__(self, x=0, y=0, layer=0, x_scale=1, y_scale=1, orientation=0, img_path=os.path.join("assets", "empty.png")):
         super().__init__()
@@ -38,11 +37,29 @@ class Domino(GameObject):
     def __init__(self, vals:list, **kwargs):
         self.vals = vals
         self.path = f"{vals[0]}-{vals[1]}.png"
-        super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=90, **kwargs)
+        super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=0, **kwargs)
+
+    def __repr__(self):
+        return str(list(self.vals))
 
 
-#Class Player
-#Clase Computer
+class Player:
+    def __init__(self, manual=True):
+        self.dominoes = []
+        self.manual = manual
+
+    def add_domino(self, domino):
+        self.dominoes.append(domino)
+
+    def change_manual(self):
+        if self.manual:
+            self.manual = False
+        else:
+            self.manual = True
+
+    def __repr__(self):
+        return f"\nPlayer (Manual: {self.manual})\nDominoes: {self.dominoes}\n"
+
 
 def change_vals(path, idx1, idx2):
     characters = list(path)
