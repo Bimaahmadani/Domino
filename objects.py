@@ -75,6 +75,9 @@ class Domino(GameObject):
     def view_vertical(self):
         super().change_orientation(0)
 
+    def change_orientation_sprite(self):
+        super().change_orientation(180)
+
     def change_orientation_vals(self):
         self.vals = [self.vals[1], self.vals[0]]
         super().change_orientation(180)

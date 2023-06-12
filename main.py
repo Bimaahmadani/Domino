@@ -65,18 +65,43 @@ class Table:
     def is_empty(self):
         return len(self.table_dominoes) == 0
     
-    def create_positions(self):
-        left_x, left_y = 600, 360
+    def create_right_positions(self):
+        right_x, right_y = 795, 360
+        self.right_positions.append([right_x, right_y])
+        for _ in range(5):
+            right_x, right_y = right_x + 95, right_y
+            self.right_positions.append([right_x, right_y])
+        
+        right_x, right_y = right_x, right_y + 95
+        self.right_positions.append([right_x, right_y])
+        for _ in range(3):
+            right_x, right_y = right_x, right_y + 95
+            self.right_positions.append([right_x, right_y])
+
+        right_x, right_y = right_x - 95, right_y
+        self.right_positions.append([right_x, right_y])
+        for _ in range(5):
+            right_x, right_y = right_x - 95, right_y
+            self.right_positions.append([right_x, right_y])
+
+    def create_left_positions(self):
+        left_x, left_y = 605,360
         self.left_positions.append([left_x, left_y])
-        for i in range(28):
-            left_x, left_y = left_x - 100, left_y
+        for _ in range(5):
+            left_x, left_y = left_x - 95, left_y
+            self.left_positions.append([left_x, left_y])
+            
+        left_x, left_y = left_x, left_y - 95
+        self.left_positions.append([left_x, left_y])
+        for _ in range(2):
+            left_x, left_y = left_x, left_y - 95
             self.left_positions.append([left_x, left_y])
 
-        right_x, right_y = 800, 360
-        self.right_positions.append([right_x, right_y])
-        for i in range(28):
-            right_x, right_y = right_x + 100, right_y
-            self.right_positions.append([right_x, right_y])
+        left_x, left_y = left_x + 95, left_y
+        self.left_positions.append([left_x, left_y])
+        for _ in range(5):
+            left_x, left_y = left_x + 95, left_y
+            self.left_positions.append([left_x, left_y])
 
     def can_be_put(self, domino):
         if self.is_empty():
@@ -105,20 +130,32 @@ class Table:
             domino.add_position(700, 360)
 
         if self.side == "left" and domino.vals[1] != self.table_dominoes[0].vals[0] or self.side == "right" and domino.vals[0] != self.table_dominoes[-1].vals[-1]:
-            domino.change_orientation_vals()
+            domino.change_orientation_vals()     
 
         if self.side != "both":
             if self.side == "left":
-                self.table_dominoes.insert(0, domino)
+                if self.left_iterator >= 6 and self.left_iterator <= 8:
+                    domino.change_orientation_sprite()
+                    domino.view_horizontal()
 
+                elif self.left_iterator >= 8:
+                    domino.change_orientation_sprite()
+
+                self.table_dominoes.insert(0, domino)
                 x, y = self.left_positions[self.left_iterator][0], self.left_positions[self.left_iterator][1]
                 domino.add_position(x, y)
 
                 self.left_iterator += 1
 
             if self.side == "right":
-                self.table_dominoes.append(domino)
+                if self.right_iterator >= 6 and self.right_iterator <= 8:
+                    domino.change_orientation_sprite()
+                    domino.view_horizontal()
 
+                elif self.right_iterator >= 8:
+                    domino.change_orientation_sprite()
+
+                self.table_dominoes.append(domino)
                 x, y = self.right_positions[self.right_iterator][0], self.right_positions[self.right_iterator][1]
                 domino.add_position(x, y)
 
@@ -134,7 +171,8 @@ class Table:
     def start_game(self):
         self.dominoes_distribution()
         self.draw_player_dominoes()
-        self.create_positions()
+        self.create_right_positions()
+        self.create_left_positions()
 
         if PLAYERS_NUM < 4:
             self.draw_extra_dominoes()
@@ -155,7 +193,7 @@ def update_layers():
         layer.draw(WINDOW)
 
 
-def delete_from_layers(domino):
+def delete_from_layers():
     pass
 
 
@@ -170,8 +208,8 @@ def main():
     while True:
         #print(f"Player #{TURN+1} turn")
         #print(OBJECTS)
-        clock.tick(FPS) 
         print(table, PLAYERS[0])
+        clock.tick(FPS)         
 
         if TURN == 0:
             for event in pygame.event.get():
@@ -196,6 +234,7 @@ def main():
                     if OBJECTS[0].click_me():
                         try:
                             PLAYERS[0].add_domino(table.draw_random())
+                            table.draw_player_dominoes()
                             #print(PLAYERS[0])
 
                         except:
@@ -211,6 +250,7 @@ def main():
             played = False
             TURN = 0
 
+        WINDOW.blit(BACKGROUND, (0, 0))
         update_layers()
         pygame.display.flip()
         pygame.display.update()
