@@ -11,17 +11,24 @@ class GameObject(pygame.sprite.Sprite):
         self.y_scale = y_scale
         self.orientation = orientation
         self.__load_image(img_path)
+        self.change_vals = False
 
     def __load_image(self, path):
+        self.change_vals = False
+
         try:
             self.image = pygame.image.load(path).convert()
         except:
             path = change_vals(path, 22, 24)
             self.image = pygame.image.load(path).convert()
+            self.change_vals = True
 
         self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
         self.image = pygame.transform.rotate(self.image, self.orientation)
         self.rect = self.image.get_rect()
+
+        if self.change_vals:
+            self.change_orientation(180)
 
     def update(self):
         self.rect.center = (self.x, self.y)
@@ -46,6 +53,11 @@ class Domino(GameObject):
     def __init__(self, vals:list, **kwargs):
         self.vals = vals
 
+        if vals[0] == vals[1]:
+            self.acotao = True
+        else:
+            self.acotao = False
+
         if vals == [7, 7]:
             self.path = "_.png"
         else:
@@ -64,7 +76,11 @@ class Domino(GameObject):
         super().change_orientation(0)
 
     def change_orientation_vals(self):
+        self.vals = [self.vals[1], self.vals[0]]
         super().change_orientation(180)
+
+    def update(self):
+        super().update()
 
     def click_me(self):
         self.receive_rect()
