@@ -25,6 +25,7 @@ class GameObject(pygame.sprite.Sprite):
 
         self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
         self.image = pygame.transform.rotate(self.image, self.orientation)
+        self.image.set_colorkey( ( 0, 187, 45 ) )
         self.rect = self.image.get_rect()
 
         if self.change_vals:

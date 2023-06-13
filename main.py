@@ -16,7 +16,7 @@ pygame.display.set_caption('Dominó!')
 ICON = pygame.image.load("assets/Domino (icon).png").convert()
 pygame.display.set_icon(ICON)
 
-PLAYERS_NUM = 4
+PLAYERS_NUM = 2
 BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert()
 WINDOW.blit(BACKGROUND, (0, 0))
 
@@ -169,6 +169,14 @@ class Table:
     def choose_side(self, domino):
         pass
 
+    def players_dominoes(self):
+        x, y = 1300, 30
+        for player_idx in range(1, PLAYERS_NUM):
+            num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{len(PLAYERS[player_idx].dominoes)}.png").convert()
+            num_dominoes.set_colorkey( ( 0, 187, 45 ) )
+            WINDOW.blit(num_dominoes, (x, y))
+            x, y = x, y + 65
+
     def start_game(self):
         self.dominoes_distribution()
         self.draw_player_dominoes()
@@ -191,16 +199,7 @@ def update_layers():
 
     for _, layer in LAYERS.items():
         layer.update()
-        layer.draw(WINDOW)
-
-
-def players_dominoes():
-    x, y = 1200, 200
-    for player_idx in range(1, PLAYERS_NUM):
-        num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{len(PLAYERS[player_idx].dominoes)}.png").convert()
-        WINDOW.blit(num_dominoes, (x, y))
-        x, y = x, y + 100
-        
+        layer.draw(WINDOW)      
 
 
 def main():
@@ -215,7 +214,7 @@ def main():
         #print(f"Player #{TURN+1} turn")
         #print(OBJECTS)
         print(table, PLAYERS[0])
-        clock.tick(FPS)         
+        clock.tick(FPS)      
 
         if TURN == 0:
             for event in pygame.event.get():
@@ -224,10 +223,9 @@ def main():
                     sys.exit()
 
                 if event.type == MOUSEBUTTONDOWN:
+
                     for domino in PLAYERS[0].dominoes:
                         if domino.click_me():
-                            #print(domino)
-                            
                             if table.can_be_put(domino):
                                 table.add_domino_to_table(domino)
                                 PLAYERS[0].dominoes.remove(domino)
@@ -240,7 +238,6 @@ def main():
                     if OBJECTS[0].click_me():
                         try:
                             PLAYERS[0].add_domino(table.draw_random())
-                            table.draw_player_dominoes()
                             #print(PLAYERS[0])
 
                         except:
@@ -257,7 +254,9 @@ def main():
             TURN = 0
 
         WINDOW.blit(BACKGROUND, (0, 0))
-        players_dominoes()
+        table.draw_player_dominoes()
+        table.players_dominoes()
+        
         update_layers()
         pygame.display.flip()
         pygame.display.update()
