@@ -1,10 +1,11 @@
 from pygame.sprite import Group as Layer
-from objects import Domino, Player
+from objects import Domino, Player, Arrow
 from pygame.locals import *
 import pygame
 import random
 import sys
 import os
+
 
 #Window configuration
 pygame.init()
@@ -32,10 +33,15 @@ class Table:
         self.spacing = 95
         self.dominoes = []
         self.table_dominoes = []
-        self.left_positions = []
-        self.right_positions = []
+
         self.left_iterator = 0
         self.right_iterator = 0
+        self.left_positions = []
+        self.right_positions = []
+
+        self.right_arrow = Arrow()
+        self.left_arrow = Arrow()
+        self.left_arrow_orientation = True
 
     def dominoes_distribution(self):
         for i in range(7):
@@ -57,7 +63,10 @@ class Table:
 
         for domino in PLAYERS[0].dominoes:
             domino.add_position(spacing, 717)
-            OBJECTS.append(domino)
+            
+            if domino not in OBJECTS:
+                OBJECTS.append(domino)
+
             spacing += 68
 
     def draw_extra_dominoes(self):
@@ -85,6 +94,12 @@ class Table:
             right_x, right_y = right_x - self.spacing, right_y
             self.right_positions.append([right_x, right_y])
 
+        right_x, right_y = right_x, right_y - self.spacing
+        self.right_positions.append([right_x, right_y])
+        for _ in range(2):
+            right_x, right_y = right_x, right_y - self.spacing
+            self.right_positions.append([right_x, right_y])
+
     def create_left_positions(self):
         left_x, left_y = 605,360
         self.left_positions.append([left_x, left_y])
@@ -100,8 +115,20 @@ class Table:
 
         left_x, left_y = left_x + self.spacing, left_y
         self.left_positions.append([left_x, left_y])
-        for _ in range(5):
+        for _ in range(9):
             left_x, left_y = left_x + self.spacing, left_y
+            self.left_positions.append([left_x, left_y])
+
+        left_x, left_y = left_x, left_y + self.spacing
+        self.left_positions.append([left_x, left_y])
+        for _ in range(2):
+            left_x, left_y = left_x, left_y + self.spacing
+            self.left_positions.append([left_x, left_y])
+            
+        left_x, left_y = left_x - self.spacing, left_y
+        self.left_positions.append([left_x, left_y])
+        for _ in range(9):
+            left_x, left_y = left_x - self.spacing, left_y
             self.left_positions.append([left_x, left_y])
 
     def can_be_put(self, domino):
@@ -115,59 +142,96 @@ class Table:
 
         if left in domino.vals: self.side = "left"
         if right in domino.vals: self.side = "right"
-        #if right in domino.vals and left in domino.vals:
-        #    self.side = "both"
+        if right in domino.vals and left in domino.vals:
+            self.side = "both"
 
         return left in domino.vals or right in domino.vals
     
     def add_domino_to_table(self, domino):
-        if domino.acotao:
-            domino.view_vertical()
-        else:
-            domino.view_horizontal()
-
-        if self.side == "none":
-            self.table_dominoes.insert(0, domino)
-            domino.add_position(700, 360)
-
-        if self.side == "left" and domino.vals[1] != self.table_dominoes[0].vals[0] or self.side == "right" and domino.vals[0] != self.table_dominoes[-1].vals[-1]:
-            domino.change_orientation_vals()     
-
         if self.side != "both":
-            if self.side == "left":
-                if self.left_iterator >= 6 and self.left_iterator <= 8:
-                    domino.change_orientation_sprite()
-                    domino.view_horizontal()
 
-                elif self.left_iterator >= 8:
-                    domino.change_orientation_sprite()
+            if domino.acotao:
+                domino.view_vertical()
+            else:
+                domino.view_horizontal()
 
+            if self.side == "none":
                 self.table_dominoes.insert(0, domino)
-                x, y = self.left_positions[self.left_iterator][0], self.left_positions[self.left_iterator][1]
-                domino.add_position(x, y)
+                domino.add_position(700, 360)
 
-                self.left_iterator += 1
+            if self.side == "left" and domino.vals[1] != self.table_dominoes[0].vals[0] or self.side == "right" and domino.vals[0] != self.table_dominoes[-1].vals[-1]:
+                domino.change_orientation_vals()     
+
+            if self.side == "left":
+                self.left_placement(domino)
 
             if self.side == "right":
-                if self.right_iterator >= 6 and self.right_iterator <= 8:
-                    domino.change_orientation_sprite()
-                    domino.view_horizontal()
-
-                elif self.right_iterator >= 8:
-                    domino.change_orientation_sprite()
-
-                self.table_dominoes.append(domino)
-                x, y = self.right_positions[self.right_iterator][0], self.right_positions[self.right_iterator][1]
-                domino.add_position(x, y)
-
-                self.right_iterator += 1
-
+                self.right_placement(domino)
+        
         else:
             self.choose_side(domino)
-            pass
-    
+
     def choose_side(self, domino):
-        pass
+        self.activate_arrows()
+        choose = True
+
+        while choose:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == MOUSEBUTTONDOWN:
+                    if self.right_arrow.click_me():
+                        self.side = "right"
+                        choose = False
+                        break
+
+                    if self.left_arrow.click_me():
+                        self.side = "left"
+                        choose = False
+                        break
+
+            update_layers()
+            pygame.display.flip()
+            pygame.display.update()
+
+        self.add_domino_to_table(domino)
+        self.deactivate_arrows()
+
+    def left_placement(self, domino):
+        if self.left_iterator >= 6 and self.left_iterator <= 8:
+            domino.change_orientation_sprite()
+            domino.view_horizontal()
+
+        elif self.left_iterator >= 8:
+            domino.change_orientation_sprite()
+
+        self.table_dominoes.insert(0, domino)
+        x, y = self.left_positions[self.left_iterator][0], self.left_positions[self.left_iterator][1]
+        domino.add_position(x, y)
+
+        self.left_iterator += 1
+
+    def right_placement(self, domino):
+        if self.right_iterator >= 6 and self.right_iterator <= 8:
+            domino.change_orientation_sprite()
+            domino.view_horizontal()
+
+        elif self.right_iterator >= 8 and self.right_iterator <= 15:
+            domino.change_orientation_sprite()
+
+        elif self.right_iterator >= 15 and self.right_iterator <= 17:
+            domino.view_horizontal()
+
+        elif self.right_iterator >= 17:
+            domino.change_orientation_sprite()
+
+        self.table_dominoes.append(domino)
+        x, y = self.right_positions[self.right_iterator][0], self.right_positions[self.right_iterator][1]
+        domino.add_position(x, y)
+
+        self.right_iterator += 1
 
     def players_dominoes(self):
         x, y = 1300, 30
@@ -176,6 +240,25 @@ class Table:
             num_dominoes.set_colorkey( ( 0, 187, 45 ) )
             WINDOW.blit(num_dominoes, (x, y))
             x, y = x, y + 65
+
+    def activate_arrows(self):
+        if self.left_arrow_orientation:
+            self.left_arrow.change_orientation_sprite()
+            self.left_arrow_orientation = False
+
+        self.right_arrow.add_position(576, 636)
+        self.left_arrow.add_position(476, 636)
+
+        if self.left_arrow not in OBJECTS and self.right_arrow not in OBJECTS:
+            OBJECTS.insert(1, self.left_arrow)
+            OBJECTS.insert(2, self.right_arrow)
+
+        self.right_arrow.update()
+        self.left_arrow.update()
+
+    def deactivate_arrows(self):
+        self.right_arrow.deactivate()
+        self.left_arrow.deactivate()
 
     def start_game(self):
         self.dominoes_distribution()
@@ -213,7 +296,7 @@ def main():
     while True:
         #print(f"Player #{TURN+1} turn")
         #print(OBJECTS)
-        print(table, PLAYERS[0])
+        #print(table, PLAYERS[0])
         clock.tick(FPS)      
 
         if TURN == 0:
@@ -223,15 +306,12 @@ def main():
                     sys.exit()
 
                 if event.type == MOUSEBUTTONDOWN:
-
                     for domino in PLAYERS[0].dominoes:
                         if domino.click_me():
                             if table.can_be_put(domino):
                                 table.add_domino_to_table(domino)
                                 PLAYERS[0].dominoes.remove(domino)
-
                                 played = True
-
                             else:
                                 print("!!")
                                 
@@ -239,7 +319,6 @@ def main():
                         try:
                             PLAYERS[0].add_domino(table.draw_random())
                             #print(PLAYERS[0])
-
                         except:
                             pass
 

@@ -31,6 +31,9 @@ class GameObject(pygame.sprite.Sprite):
         if self.change_vals:
             self.change_orientation(180)
 
+    def update_image(self, path):
+        self.image = pygame.image.load(path).convert()
+
     def update(self):
         self.rect.center = (self.x, self.y)
 
@@ -104,28 +107,28 @@ class Domino(GameObject):
 
 class Arrow(GameObject):
     def __init__(self):
+        self.path = "arrow.png"
         self.can_choose = False
-        super().__init__(img_path=os.path.join("assets", "arrow_X.png", self.path), x_scale=1, y_scale=1, orientation=0)
+        self.position = None
+        super().__init__(img_path=os.path.join("assets", "Dominos (Interface)", self.path), x_scale=1, y_scale=1, orientation=0)
+
+    def add_position(self, x, y):
+        super().add_position(x, y)
+        self.position = [x, y]
 
     def change_orientation_sprite(self):
         super().change_orientation(180)
 
-    def activate(self):
-        self.can_choose = True
-        super().__load_image("/assets/Dominos (Game)/arrow.png")
-
     def deactivate(self):
-        super().__load_image("/assets/Dominos (Game)/arrow_X.png")
-        self.can_choose = False
+        self.add_position(9999, 9999)
 
     def click_me(self):
-        if self.can_choose:
-            self.receive_rect()
-            mouse_position = pygame.mouse.get_pos()
-            if self.rect.collidepoint(mouse_position):
-                return True
-            else:
-                return False
+        self.receive_rect()
+        mouse_position = pygame.mouse.get_pos()
+        if self.rect.collidepoint(mouse_position):
+            return True
+        else:
+            return False
         
     def receive_rect(self):
         rect = super().give_rect()
