@@ -101,6 +101,36 @@ class Domino(GameObject):
         return str(list(self.vals))
 
 
+class Arrow(GameObject):
+    def __init__(self):
+        self.can_choose = False
+        super().__init__(img_path=os.path.join("assets", "arrow_X.png", self.path), x_scale=1, y_scale=1, orientation=0)
+
+    def change_orientation_sprite(self):
+        super().change_orientation(180)
+
+    def activate(self):
+        self.can_choose = True
+        super().__load_image("/assets/Dominos (Game)/arrow.png")
+
+    def deactivate(self):
+        super().__load_image("/assets/Dominos (Game)/arrow_X.png")
+        self.can_choose = False
+
+    def click_me(self):
+        if self.can_choose:
+            self.receive_rect()
+            mouse_position = pygame.mouse.get_pos()
+            if self.rect.collidepoint(mouse_position):
+                return True
+            else:
+                return False
+        
+    def receive_rect(self):
+        rect = super().give_rect()
+        self.rect = rect
+
+
 class Player:
     def __init__(self, manual=True):
         self.dominoes = []

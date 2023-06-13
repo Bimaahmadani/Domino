@@ -16,7 +16,7 @@ pygame.display.set_caption('Dominó!')
 ICON = pygame.image.load("assets/Domino (icon).png").convert()
 pygame.display.set_icon(ICON)
 
-PLAYERS_NUM = 2
+PLAYERS_NUM = 4
 BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert()
 WINDOW.blit(BACKGROUND, (0, 0))
 
@@ -29,6 +29,7 @@ FPS = 60
 
 class Table:
     def __init__(self):
+        self.spacing = 95
         self.dominoes = []
         self.table_dominoes = []
         self.left_positions = []
@@ -69,38 +70,38 @@ class Table:
         right_x, right_y = 795, 360
         self.right_positions.append([right_x, right_y])
         for _ in range(5):
-            right_x, right_y = right_x + 95, right_y
+            right_x, right_y = right_x + self.spacing, right_y
             self.right_positions.append([right_x, right_y])
         
-        right_x, right_y = right_x, right_y + 95
+        right_x, right_y = right_x, right_y + self.spacing
         self.right_positions.append([right_x, right_y])
         for _ in range(3):
-            right_x, right_y = right_x, right_y + 95
+            right_x, right_y = right_x, right_y + self.spacing
             self.right_positions.append([right_x, right_y])
 
-        right_x, right_y = right_x - 95, right_y
+        right_x, right_y = right_x - self.spacing, right_y
         self.right_positions.append([right_x, right_y])
         for _ in range(5):
-            right_x, right_y = right_x - 95, right_y
+            right_x, right_y = right_x - self.spacing, right_y
             self.right_positions.append([right_x, right_y])
 
     def create_left_positions(self):
         left_x, left_y = 605,360
         self.left_positions.append([left_x, left_y])
         for _ in range(5):
-            left_x, left_y = left_x - 95, left_y
+            left_x, left_y = left_x - self.spacing, left_y
             self.left_positions.append([left_x, left_y])
             
-        left_x, left_y = left_x, left_y - 95
+        left_x, left_y = left_x, left_y - self.spacing
         self.left_positions.append([left_x, left_y])
         for _ in range(2):
-            left_x, left_y = left_x, left_y - 95
+            left_x, left_y = left_x, left_y - self.spacing
             self.left_positions.append([left_x, left_y])
 
-        left_x, left_y = left_x + 95, left_y
+        left_x, left_y = left_x + self.spacing, left_y
         self.left_positions.append([left_x, left_y])
         for _ in range(5):
-            left_x, left_y = left_x + 95, left_y
+            left_x, left_y = left_x + self.spacing, left_y
             self.left_positions.append([left_x, left_y])
 
     def can_be_put(self, domino):
@@ -193,8 +194,13 @@ def update_layers():
         layer.draw(WINDOW)
 
 
-def delete_from_layers():
-    pass
+def players_dominoes():
+    x, y = 1200, 200
+    for player_idx in range(1, PLAYERS_NUM):
+        num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{len(PLAYERS[player_idx].dominoes)}.png").convert()
+        WINDOW.blit(num_dominoes, (x, y))
+        x, y = x, y + 100
+        
 
 
 def main():
@@ -251,6 +257,7 @@ def main():
             TURN = 0
 
         WINDOW.blit(BACKGROUND, (0, 0))
+        players_dominoes()
         update_layers()
         pygame.display.flip()
         pygame.display.update()
