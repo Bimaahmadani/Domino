@@ -6,26 +6,33 @@ import random
 import sys
 import os
 
-
 #Window configuration
 pygame.init()
 WIDTH, HEIGHT = 1400, 800
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
+GREEN_SCREEN_BKG = ( 0, 187, 45 )
 
 pygame.display.set_caption('Dominó!')
 
 ICON = pygame.image.load("assets/Domino (icon).png").convert()
 pygame.display.set_icon(ICON)
 
-PLAYERS_NUM = 2
+PLAYERS_NUM = 4
 BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert()
+PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert()
+PLAYER__.set_colorkey( GREEN_SCREEN_BKG )
+
+PLAYER__pos = (26, 606)
+PLAYER_NUM_pos = (240, 599)
+
 WINDOW.blit(BACKGROUND, (0, 0))
+WINDOW.blit(PLAYER__, PLAYER__pos)
 
 OBJECTS = []#Domino([1, 6], x=200, y=200)]
 LAYERS = {0: Layer()}
 
 PLAYERS = [Player() for _ in range(PLAYERS_NUM)]
-FPS = 60
+FPS = 160
 
 
 class Table:
@@ -39,8 +46,8 @@ class Table:
         self.left_positions = []
         self.right_positions = []
 
-        self.right_arrow = Arrow()
         self.left_arrow = Arrow()
+        self.right_arrow = Arrow()
         self.left_arrow_orientation = True
 
     def dominoes_distribution(self):
@@ -58,16 +65,29 @@ class Table:
     def draw_by_position(self, position):
         return self.dominoes.pop(position)
     
-    def draw_player_dominoes(self):
+    def draw_player_number(self, player_number):
+        global player_to_play
+        player_to_play = pygame.image.load(f"assets/Dominos (Interface)/{player_number + 1}p.png").convert()
+        player_to_play.set_colorkey( GREEN_SCREEN_BKG )
+        WINDOW.blit(player_to_play, PLAYER_NUM_pos)
+        update_layers()
+
+    def draw_player_dominoes(self, player_idx):
+        self.erase_player_dominoes()
         spacing = 64
 
-        for domino in PLAYERS[0].dominoes:
+        for domino in PLAYERS[player_idx].dominoes:
             domino.add_position(spacing, 717)
             
             if domino not in OBJECTS:
                 OBJECTS.append(domino)
 
             spacing += 68
+
+    def erase_player_dominoes(self):
+        for player_idx in range(0, PLAYERS_NUM):
+            for domino in PLAYERS[player_idx].dominoes:
+                domino.add_position(9999, 9999)
 
     def draw_extra_dominoes(self):
         OBJECTS.insert(0, Domino([7, 7], x=548, y=717))
@@ -193,8 +213,6 @@ class Table:
                         break
 
             update_layers()
-            pygame.display.flip()
-            pygame.display.update()
 
         self.add_domino_to_table(domino)
         self.deactivate_arrows()
@@ -236,8 +254,13 @@ class Table:
     def players_dominoes(self):
         x, y = 1300, 30
         for player_idx in range(1, PLAYERS_NUM):
-            num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{len(PLAYERS[player_idx].dominoes)}.png").convert()
-            num_dominoes.set_colorkey( ( 0, 187, 45 ) )
+            dominoes_amount = len(PLAYERS[player_idx].dominoes)
+
+            if dominoes_amount >= 7:
+                dominoes_amount = 7
+
+            num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{dominoes_amount}.png").convert()
+            num_dominoes.set_colorkey( GREEN_SCREEN_BKG )
             WINDOW.blit(num_dominoes, (x, y))
             x, y = x, y + 65
 
@@ -260,9 +283,45 @@ class Table:
         self.right_arrow.deactivate()
         self.left_arrow.deactivate()
 
+    def player_plays(self, player_idx):
+        played = False
+
+        while played != True:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == MOUSEBUTTONDOWN:
+                    for domino in PLAYERS[player_idx].dominoes:
+                        if domino.click_me():
+                            if self.can_be_put(domino):
+                                self.add_domino_to_table(domino)
+                                PLAYERS[player_idx].dominoes.remove(domino)
+                                played = True
+                            else:
+                                print("!!")
+                                    
+                    if OBJECTS[0].click_me():
+                        try:
+                            PLAYERS[player_idx].add_domino(self.draw_random())
+                            break
+                            #print(PLAYERS[player_idx])
+
+                        except:
+                            pass
+
+            self.draw_player_dominoes(player_idx)
+            self.players_dominoes()
+            update_layers()
+
+        return played
+
+    def computer_plays(self, computer_idx):
+        return True
+
     def start_game(self):
         self.dominoes_distribution()
-        self.draw_player_dominoes()
         self.create_right_positions()
         self.create_left_positions()
 
@@ -274,6 +333,10 @@ class Table:
 
 
 def update_layers():
+    WINDOW.blit(BACKGROUND, (0, 0))
+    WINDOW.blit(PLAYER__, PLAYER__pos)
+    WINDOW.blit(player_to_play, PLAYER_NUM_pos)
+
     for object in OBJECTS:
         if object.layer not in LAYERS:
             LAYERS[object.layer] = Layer()
@@ -282,7 +345,10 @@ def update_layers():
 
     for _, layer in LAYERS.items():
         layer.update()
-        layer.draw(WINDOW)      
+        layer.draw(WINDOW)
+
+    pygame.display.flip()
+    pygame.display.update() 
 
 
 def main():
@@ -290,55 +356,34 @@ def main():
     table.start_game()
 
     clock = pygame.time.Clock()
-    played = False
     TURN = 0  
 
     while True:
-        #print(f"Player #{TURN+1} turn")
-        #print(OBJECTS)
-        #print(table, PLAYERS[0])
+        print(TURN)
+
         clock.tick(FPS)      
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
 
-        if TURN == 0:
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-                if event.type == MOUSEBUTTONDOWN:
-                    for domino in PLAYERS[0].dominoes:
-                        if domino.click_me():
-                            if table.can_be_put(domino):
-                                table.add_domino_to_table(domino)
-                                PLAYERS[0].dominoes.remove(domino)
-                                played = True
-                            else:
-                                print("!!")
-                                
-                    if OBJECTS[0].click_me():
-                        try:
-                            PLAYERS[0].add_domino(table.draw_random())
-                            #print(PLAYERS[0])
-                        except:
-                            pass
+        if PLAYERS[TURN].manual:
+            table.draw_player_number(TURN)
+            table.draw_player_dominoes(TURN)
+            played = table.player_plays(TURN)
 
         else:
-            pass
+            played = table.computer_plays(TURN)
 
         if played:
+            played = False
             TURN += 1
 
-        if TURN >= PLAYERS_NUM:
-            played = False
-            TURN = 0
+            if TURN >= PLAYERS_NUM:
+                TURN = 0
 
-        WINDOW.blit(BACKGROUND, (0, 0))
-        table.draw_player_dominoes()
         table.players_dominoes()
-        
         update_layers()
-        pygame.display.flip()
-        pygame.display.update()
 
 
 if __name__ == '__main__':

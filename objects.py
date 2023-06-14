@@ -1,6 +1,8 @@
 import pygame
 import os
 
+GREEN_SCREEN_BKG = ( 0, 187, 45 )
+
 class GameObject(pygame.sprite.Sprite):
     def __init__(self, x=0, y=0, layer=0, x_scale=1, y_scale=1, orientation=0, img_path=os.path.join("assets", "empty.png")):
         super().__init__()
@@ -25,7 +27,7 @@ class GameObject(pygame.sprite.Sprite):
 
         self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
         self.image = pygame.transform.rotate(self.image, self.orientation)
-        self.image.set_colorkey( ( 0, 187, 45 ) )
+        self.image.set_colorkey( GREEN_SCREEN_BKG )
         self.rect = self.image.get_rect()
 
         if self.change_vals:
