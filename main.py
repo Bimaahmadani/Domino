@@ -35,7 +35,8 @@ PLAYER_NUM_pos = (240, 599)
 WINDOW.blit(BACKGROUND, (0, 0))
 WINDOW.blit(PLAYER__, PLAYER__pos)
 
-OBJECTS = []#Domino([1, 6], x=200, y=200)]
+#domino_test = Domino([1, 6], x=200, y=200)]
+OBJECTS = []#domino_test
 LAYERS = {0: Layer()}
 
 PLAYERS = [Player() for _ in range(PLAYERS_NUM)]
@@ -264,20 +265,25 @@ class Table:
         self.right_iterator += 1
 
     def players_dominoes(self):
-        x, y = 1300, 30
-        for player_idx in range(1, PLAYERS_NUM):
-            dominoes_amount = len(PLAYERS[player_idx].dominoes)
-
-            if dominoes_amount == 0:
-                break
+        x, y = 1309, 30
+        num_x, num_y = 1260, 12
+        for player in range(0, PLAYERS_NUM):
+            dominoes_amount = len(PLAYERS[player].dominoes)
 
             if dominoes_amount >= 7:
                 dominoes_amount = 7
 
             num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{dominoes_amount}.png").convert()
             num_dominoes.set_colorkey( GREEN_SCREEN_BKG )
+
+            player_num = pygame.image.load(f"assets/Dominos (Interface)/{player + 1}p.png").convert()
+            player_num.set_colorkey( GREEN_SCREEN_BKG )
+
             WINDOW.blit(num_dominoes, (x, y))
+            WINDOW.blit(player_num, (num_x, num_y))
+
             x, y = x, y + 65
+            num_x, num_y = num_x, num_y + 64
 
     def activate_arrows(self):
         if self.left_arrow_orientation:
@@ -326,7 +332,6 @@ class Table:
     def player_plays(self, player_idx):
         played = False
 
-        print(OBJECTS)
         while played != True:
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -370,10 +375,8 @@ class Table:
                         sys.exit()
 
             self.draw_player_dominoes(player_idx)
-            self.players_dominoes()
             update_layers()
 
-        print(OBJECTS)
         time.sleep(SLEEP_TIME)
         return played
 
@@ -411,6 +414,7 @@ def update_layers():
     WINDOW.blit(BACKGROUND, (0, 0))
     WINDOW.blit(PLAYER__, PLAYER__pos)
     WINDOW.blit(player_to_play, PLAYER_NUM_pos)
+    table.players_dominoes()
 
     for object in OBJECTS:
         if object.layer not in LAYERS:
@@ -427,6 +431,7 @@ def update_layers():
 
 
 def main():
+    global table
     table = Table()
     table.start_game()
 
@@ -459,7 +464,6 @@ def main():
             if TURN >= PLAYERS_NUM:
                 TURN = 0
 
-        table.players_dominoes()
         update_layers()
 
     OBJECTS, LAYERS = table.repeat_game()
