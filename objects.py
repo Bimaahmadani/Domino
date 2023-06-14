@@ -91,6 +91,9 @@ class Domino(GameObject):
     def update(self):
         super().update()
 
+    def sum_vals(self):
+        return int(self.vals[0]) + int(self.vals[1])
+
     def click_me(self):
         self.receive_rect()
         mouse_position = pygame.mouse.get_pos()
@@ -137,7 +140,8 @@ class Button(GameObject):
 
 
 class Player:
-    def __init__(self, manual=True):
+    def __init__(self, num, manual=True):
+        self.num = num
         self.dominoes = []
         self.manual = manual
 
@@ -147,6 +151,14 @@ class Player:
     def remove_all(self):
         self.dominoes = []
 
+    def count_tiles(self):
+        sum_of_dominoes = 0
+
+        for domino in self.dominoes:
+            sum_of_dominoes += domino.sum_vals()
+
+        return sum_of_dominoes
+
     def change_manual(self):
         if self.manual:
             self.manual = False
@@ -154,7 +166,7 @@ class Player:
             self.manual = True
 
     def __repr__(self):
-        return f"\nPlayer (Manual: {self.manual})\nDominoes: {self.dominoes}\n"
+        return f"\nPlayer #{self.num} (Manual: {self.manual})\nDominoes: {self.dominoes}\n"
 
 
 def change_vals(path, idx1, idx2):

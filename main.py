@@ -39,7 +39,7 @@ WINDOW.blit(PLAYER__, PLAYER__pos)
 OBJECTS = []#domino_test
 LAYERS = {0: Layer()}
 
-PLAYERS = [Player() for _ in range(PLAYERS_NUM)]
+PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
 FPS = 160
 
 
@@ -424,6 +424,89 @@ class Table:
         return str(self.table_dominoes)
 
 
+class GameManager():
+    def __init__(self):
+        self.Game_Over = False
+        self.You_Win = False
+        self.In_Game = False
+
+        self.possibility_of_lock_the_game = False
+
+    def check_game_status(self, last_turn):
+        players_without_dominos = 0
+
+        for player in PLAYERS:
+            winner = self.check_for_winner(player)
+
+            if winner:
+                self.win(player)
+                
+            if self.possibility_of_lock_the_game:
+                can_play = self.check_player_dominoes(player)
+                if can_play:
+                    continue
+                else:
+                    players_without_dominos += 1
+
+            if players_without_dominos >= PLAYERS_NUM:
+                self.game_locked(last_turn)
+
+    def game_locked(self, last_turn):
+        player1 = PLAYERS[last_turn].count_tiles()
+        try:
+            player2 = PLAYERS[last_turn + 1].count_tiles()
+        except:
+            player2 = PLAYERS[0].count_tiles()
+
+        if player1 < player2:
+            self.win(PLAYERS[last_turn])
+        elif player1 > player2:
+            try:
+                self.win(PLAYERS[last_turn + 1])
+            except:
+                self.win(PLAYERS[0])
+        else:
+            try:
+                self.win(PLAYERS[last_turn + 1])
+            except:
+                self.win(PLAYERS[0])
+
+    def check_player_dominoes(self, player):
+        for domino in player.dominoes:
+            left = table.table_dominoes[0].vals[0]
+            right = table.table_dominoes[-1].vals[-1]
+
+            if left in domino.vals:
+                return True
+            if right in domino.vals:
+                return True
+
+        return False
+
+    def check_for_winner(self, player):
+        if len(player.dominoes) == 0:
+            return True
+        
+    def lose(self):
+        self.Game_Over = True
+
+        self.You_Win = False
+        self.In_Game = False
+
+    def win(self, winner):
+        print(f"Player #{winner.num + 1} wins the game")
+        self.You_Win = True
+
+        self.Game_Over = False
+        self.In_Game = False
+
+    def new_game(self):
+        self.In_Game = True
+
+        self.Game_Over = False
+        self.You_Win = False
+
+
 def update_layers():
     WINDOW.blit(BACKGROUND, (0, 0))
     WINDOW.blit(PLAYER__, PLAYER__pos)
@@ -446,14 +529,18 @@ def update_layers():
 
 def main():
     global table
+    global TURN
+
     table = Table()
     table.start_game()
+    gameManager = GameManager()
+    gameManager.new_game()
 
     clock = pygame.time.Clock()
     TURN = 0  
 
-    while True:
-        clock.tick(FPS)      
+    while gameManager.In_Game:
+        clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
@@ -477,6 +564,19 @@ def main():
             time.sleep(SLEEP_TIME)
             if TURN >= PLAYERS_NUM:
                 TURN = 0
+
+        if table.dominoes == []:
+            gameManager.possibility_of_lock_the_game = True
+
+        update_layers()
+        gameManager.check_game_status(TURN)
+        if gameManager.You_Win:
+            time.sleep(SLEEP_TIME*2)
+            pass
+
+        if gameManager.Game_Over:
+            time.sleep(SLEEP_TIME*2)
+            pass
 
         update_layers()
 
