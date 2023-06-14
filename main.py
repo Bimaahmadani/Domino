@@ -3,6 +3,7 @@ from objects import Domino, Player, Arrow
 from pygame.locals import *
 import pygame
 import random
+import time
 import sys
 import os
 
@@ -22,6 +23,7 @@ BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert()
 PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert()
 PLAYER__.set_colorkey( GREEN_SCREEN_BKG )
 
+SLEEP_TIME = .2
 PLAYER__pos = (26, 606)
 PLAYER_NUM_pos = (240, 599)
 
@@ -317,6 +319,7 @@ class Table:
             self.players_dominoes()
             update_layers()
 
+        time.sleep(SLEEP_TIME)
         return played
 
     def computer_plays(self, computer_idx):
@@ -381,6 +384,7 @@ def main():
             played = False
             TURN += 1
 
+            time.sleep(SLEEP_TIME)
             if TURN >= PLAYERS_NUM:
                 TURN = 0
 
