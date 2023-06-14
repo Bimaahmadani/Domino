@@ -220,6 +220,7 @@ class Table:
 
     def choose_side(self, domino):
         self.activate_arrows()
+        update_layers()
         choose = True
 
         while choose:
@@ -238,8 +239,6 @@ class Table:
                         self.side = "left"
                         choose = False
                         break
-
-            update_layers()
 
         self.add_domino_to_table(domino)
         self.deactivate_arrows()

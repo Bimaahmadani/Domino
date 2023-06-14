@@ -70,6 +70,7 @@ class Domino(GameObject):
             self.path = f"{vals[0]}-{vals[1]}.png"
 
         super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=0, **kwargs)
+        self.rect = super().give_rect()
 
     def add_position(self, x, y):
         super().add_position(x, y)
@@ -95,16 +96,11 @@ class Domino(GameObject):
         return int(self.vals[0]) + int(self.vals[1])
 
     def click_me(self):
-        self.receive_rect()
         mouse_position = pygame.mouse.get_pos()
         if self.rect.collidepoint(mouse_position):
             return True
         else:
             return False
-        
-    def receive_rect(self):
-        rect = super().give_rect()
-        self.rect = rect
 
     def __repr__(self):
         return str(list(self.vals))
@@ -115,6 +111,7 @@ class Button(GameObject):
         self.path = path
         self.position = None
         super().__init__(img_path=os.path.join("assets", "Dominos (Interface)", self.path), x_scale=1, y_scale=1, orientation=0)
+        self.rect = super().give_rect()
 
     def add_position(self, x, y):
         super().add_position(x, y)
@@ -127,16 +124,11 @@ class Button(GameObject):
         self.add_position(9999, 9999)
 
     def click_me(self):
-        self.receive_rect()
         mouse_position = pygame.mouse.get_pos()
         if self.rect.collidepoint(mouse_position):
             return True
         else:
             return False
-        
-    def receive_rect(self):
-        rect = super().give_rect()
-        self.rect = rect
 
 
 class Player:
