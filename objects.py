@@ -107,10 +107,9 @@ class Domino(GameObject):
         return str(list(self.vals))
 
 
-class Arrow(GameObject):
-    def __init__(self):
-        self.path = "arrow.png"
-        self.can_choose = False
+class Button(GameObject):
+    def __init__(self, path):
+        self.path = path
         self.position = None
         super().__init__(img_path=os.path.join("assets", "Dominos (Interface)", self.path), x_scale=1, y_scale=1, orientation=0)
 
@@ -144,6 +143,9 @@ class Player:
 
     def add_domino(self, domino):
         self.dominoes.append(domino)
+
+    def remove_all(self):
+        self.dominoes = []
 
     def change_manual(self):
         if self.manual:

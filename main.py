@@ -1,5 +1,5 @@
 from pygame.sprite import Group as Layer
-from objects import Domino, Player, Arrow
+from objects import Domino, Player, Button
 from pygame.locals import *
 import pygame
 import random
@@ -19,6 +19,11 @@ ICON = pygame.image.load("assets/Domino (icon).png").convert()
 pygame.display.set_icon(ICON)
 
 PLAYERS_NUM = 2
+if PLAYERS_NUM < 2:
+    PLAYERS_NUM = 2
+elif PLAYERS_NUM > 4:
+    PLAYERS_NUM = 4
+
 BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert()
 PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert()
 PLAYER__.set_colorkey( GREEN_SCREEN_BKG )
@@ -48,8 +53,8 @@ class Table:
         self.left_positions = []
         self.right_positions = []
 
-        self.left_arrow = Arrow()
-        self.right_arrow = Arrow()
+        self.left_arrow = Button("arrow.png")
+        self.right_arrow = Button("arrow.png")
         self.left_arrow_orientation = True
 
     def dominoes_distribution(self):
@@ -77,7 +82,7 @@ class Table:
     def draw_player_dominoes(self, player_idx):
         self.erase_player_dominoes()
         spacing = 64
-
+        
         for domino in PLAYERS[player_idx].dominoes:
             domino.add_position(spacing, 717)
             
@@ -261,6 +266,9 @@ class Table:
         for player_idx in range(1, PLAYERS_NUM):
             dominoes_amount = len(PLAYERS[player_idx].dominoes)
 
+            if dominoes_amount == 0:
+                break
+
             if dominoes_amount >= 7:
                 dominoes_amount = 7
 
@@ -287,6 +295,32 @@ class Table:
     def deactivate_arrows(self):
         self.right_arrow.deactivate()
         self.left_arrow.deactivate()
+
+    def create_buttons(self):
+        global PASS
+        global REPEAT
+        global FULLSCREEN
+        global EXIT
+
+        PASS = Button("PASS_button.png")
+        REPEAT = Button("REPEAT_button.png")
+        FULLSCREEN = Button("FULLSCREEN_button.png")
+        EXIT = Button("EXIT_button.png")
+
+        x, y = 598, 678
+        buttons = [PASS, REPEAT, FULLSCREEN, EXIT]
+
+        for button in buttons:
+            button.add_position(x, y)
+            y += 26
+
+        OBJECTS.insert(3, PASS)
+        OBJECTS.insert(4, REPEAT)
+        OBJECTS.insert(5, FULLSCREEN)
+        OBJECTS.insert(6, EXIT)
+
+        for button in buttons:
+            button.update()
 
     def player_plays(self, player_idx):
         played = False
@@ -315,6 +349,20 @@ class Table:
                         except:
                             self.hide_extra_dominoes()
 
+                    if PASS.click_me():
+                        played = True
+
+                    if REPEAT.click_me():
+                        played = -1
+                        return played
+
+                    if FULLSCREEN.click_me():
+                        pass
+
+                    if EXIT.click_me():
+                        pygame.quit()
+                        sys.exit()
+
             self.draw_player_dominoes(player_idx)
             self.players_dominoes()
             update_layers()
@@ -325,10 +373,25 @@ class Table:
     def computer_plays(self, computer_idx):
         return True
 
+    def repeat_game(self):
+        OBJECTS = []
+        LAYERS = {0: Layer()}
+
+        for player in PLAYERS:
+            player.remove_all()
+
+        self.dominoes = []
+        self.table_dominoes = []
+        self.left_iterator = 0
+        self.right_iterator = 0
+
+        return OBJECTS, LAYERS
+
     def start_game(self):
         self.dominoes_distribution()
         self.create_right_positions()
         self.create_left_positions()
+        self.create_buttons()
 
         if PLAYERS_NUM < 4:
             self.draw_extra_dominoes()
@@ -364,8 +427,6 @@ def main():
     TURN = 0  
 
     while True:
-        print(TURN)
-
         clock.tick(FPS)      
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -380,6 +441,9 @@ def main():
         else:
             played = table.computer_plays(TURN)
 
+        if played == -1:
+            break
+
         if played:
             played = False
             TURN += 1
@@ -391,6 +455,9 @@ def main():
         table.players_dominoes()
         update_layers()
 
+    OBJECTS, LAYERS = table.repeat_game()
+    return OBJECTS, LAYERS
 
 if __name__ == '__main__':
-    main()
+    while True:
+        OBJECTS, LAYERS = main()
