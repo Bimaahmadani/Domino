@@ -18,7 +18,7 @@ pygame.display.set_caption('Dominó!')
 ICON = pygame.image.load("assets/Domino (icon).png").convert()
 pygame.display.set_icon(ICON)
 
-PLAYERS_NUM = 2
+PLAYERS_NUM = 4
 if PLAYERS_NUM < 2:
     PLAYERS_NUM = 2
 elif PLAYERS_NUM > 4:
@@ -53,6 +53,7 @@ class Table:
         self.left_positions = []
         self.right_positions = []
 
+        self.extra_dominoes = None
         self.left_arrow = Button("arrow.png")
         self.right_arrow = Button("arrow.png")
         self.left_arrow_orientation = True
@@ -82,7 +83,7 @@ class Table:
     def draw_player_dominoes(self, player_idx):
         self.erase_player_dominoes()
         spacing = 64
-        
+
         for domino in PLAYERS[player_idx].dominoes:
             domino.add_position(spacing, 717)
             
@@ -97,10 +98,11 @@ class Table:
                 domino.add_position(9999, 9999)
 
     def draw_extra_dominoes(self):
-        OBJECTS.insert(0, Domino([7, 7], x=548, y=717))
+        self.extra_dominoes = Domino([7, 7], x=548, y=717)
+        OBJECTS.insert(0, self.extra_dominoes)
 
     def hide_extra_dominoes(self):
-        OBJECTS[0].add_position(9999, 9999)
+        self.extra_dominoes.add_position(9999, 9999)
 
     def is_empty(self):
         return len(self.table_dominoes) == 0
@@ -314,10 +316,9 @@ class Table:
             button.add_position(x, y)
             y += 26
 
-        OBJECTS.insert(3, PASS)
-        OBJECTS.insert(4, REPEAT)
-        OBJECTS.insert(5, FULLSCREEN)
-        OBJECTS.insert(6, EXIT)
+        for button in buttons:
+            if button not in OBJECTS:
+                OBJECTS.append(button)
 
         for button in buttons:
             button.update()
@@ -325,6 +326,7 @@ class Table:
     def player_plays(self, player_idx):
         played = False
 
+        print(OBJECTS)
         while played != True:
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -340,14 +342,18 @@ class Table:
                                 played = True
                             else:
                                 print("!!")
-                                    
-                    if OBJECTS[0].click_me():
-                        try:
-                            PLAYERS[player_idx].add_domino(self.draw_random())
-                            break
 
-                        except:
-                            self.hide_extra_dominoes()
+                    try:
+                        if self.extra_dominoes.click_me():
+                            try:
+                                PLAYERS[player_idx].add_domino(self.draw_random())
+                                break
+
+                            except:
+                                self.hide_extra_dominoes()
+                    
+                    except:
+                        pass
 
                     if PASS.click_me():
                         played = True
@@ -367,6 +373,7 @@ class Table:
             self.players_dominoes()
             update_layers()
 
+        print(OBJECTS)
         time.sleep(SLEEP_TIME)
         return played
 
