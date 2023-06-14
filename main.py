@@ -18,7 +18,7 @@ pygame.display.set_caption('Dominó!')
 ICON = pygame.image.load("assets/Domino (icon).png").convert()
 pygame.display.set_icon(ICON)
 
-PLAYERS_NUM = 4
+PLAYERS_NUM = 2
 if PLAYERS_NUM < 2:
     PLAYERS_NUM = 2
 elif PLAYERS_NUM > 4:
@@ -83,15 +83,29 @@ class Table:
 
     def draw_player_dominoes(self, player_idx):
         self.erase_player_dominoes()
-        spacing = 64
+        x_padding = 68
+        y_padding = 160
+
+        x, y = 64, 717
+        aux = 1
 
         for domino in PLAYERS[player_idx].dominoes:
-            domino.add_position(spacing, 717)
+            domino.add_position(x, y)
             
             if domino not in OBJECTS:
                 OBJECTS.append(domino)
 
-            spacing += 68
+            if aux == 7:
+                x, y = 64, 717
+                y -= y_padding
+                aux = 0
+
+                y_padding += self.spacing
+            
+            else:
+                x += x_padding
+
+            aux += 1 
 
     def erase_player_dominoes(self):
         for player_idx in range(0, PLAYERS_NUM):
