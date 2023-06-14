@@ -17,7 +17,7 @@ pygame.display.set_caption('Dominó!')
 ICON = pygame.image.load("assets/Domino (icon).png").convert()
 pygame.display.set_icon(ICON)
 
-PLAYERS_NUM = 4
+PLAYERS_NUM = 2
 BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert()
 PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert()
 PLAYER__.set_colorkey( GREEN_SCREEN_BKG )
@@ -91,6 +91,9 @@ class Table:
 
     def draw_extra_dominoes(self):
         OBJECTS.insert(0, Domino([7, 7], x=548, y=717))
+
+    def hide_extra_dominoes(self):
+        OBJECTS[0].add_position(9999, 9999)
 
     def is_empty(self):
         return len(self.table_dominoes) == 0
@@ -306,10 +309,9 @@ class Table:
                         try:
                             PLAYERS[player_idx].add_domino(self.draw_random())
                             break
-                            #print(PLAYERS[player_idx])
 
                         except:
-                            pass
+                            self.hide_extra_dominoes()
 
             self.draw_player_dominoes(player_idx)
             self.players_dominoes()
