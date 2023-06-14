@@ -152,10 +152,10 @@ class Player:
         return sum_of_dominoes
 
     def change_manual(self):
-        if self.manual:
-            self.manual = False
-        else:
-            self.manual = True
+        self.manual = True
+
+    def change_auto(self):
+        self.manual = False
 
     def __repr__(self):
         return f"\nPlayer #{self.num} (Manual: {self.manual})\nDominoes: {self.dominoes}\n"

@@ -1,11 +1,11 @@
 from pygame.sprite import Group as Layer
 from objects import Domino, Player, Button
 from pygame.locals import *
+import numpy as np
 import pygame
 import random
 import time
 import sys
-import os
 
 #Window configuration
 pygame.init()
@@ -40,6 +40,7 @@ OBJECTS = []#domino_test
 LAYERS = {0: Layer()}
 
 PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
+PLAYERS[1].change_auto()
 FPS = 160
 
 
@@ -218,6 +219,27 @@ class Table:
         else:
             self.choose_side(domino)
 
+    def add_domino_to_fake_table(self, fake_table, domino, side):
+        if side == "left" and domino.vals[1] != fake_table[0].vals[0] or side == "right" and domino.vals[0] != fake_table[-1].vals[-1]:
+            domino.change_orientation_vals()
+
+        if side == "both":
+            table1 = fake_table.insert(0, domino)
+            table2 = fake_table.append(domino)
+            return table1, table2
+
+        else:
+            if side == "none":
+                fake_table.insert(0, domino)
+
+            if side == "left":
+                fake_table.insert(0, domino)
+
+            if side == "right":
+                fake_table.append(domino)
+
+            return fake_table, None
+
     def choose_side(self, domino):
         self.activate_arrows()
         update_layers()
@@ -393,8 +415,40 @@ class Table:
         time.sleep(SLEEP_TIME)
         return played
 
+    def childrens(self, computer_idx):
+        playable_dominoes = self.check_computer_dominoes(computer_idx)
+        childrens = []
+
+        for domino, side in playable_dominoes:
+            child_state = self.table_dominoes.copy()
+            child1, child2 = self.add_domino_to_fake_table(child_state, domino, side)
+            
+            childrens.append(child1)
+            if child2 != None:
+                childrens.append(child2)
+
+        return childrens
+
     def computer_plays(self, computer_idx):
+        childrens = self.childrens(computer_idx)
+        print(childrens)
         return True
+    
+    def check_computer_dominoes(self, computer_idx):
+        playable_dominoes = []
+        for domino in PLAYERS[computer_idx].dominoes:
+            left = table.table_dominoes[0].vals[0]
+            right = table.table_dominoes[-1].vals[-1]
+
+            if left in domino.vals:
+                playable_dominoes.append([domino, "left"])
+            if right in domino.vals:
+                playable_dominoes.append([domino, "right"])
+
+            if right in domino.vals and left in domino.vals:
+                playable_dominoes.append([domino, "both"])
+
+        return playable_dominoes
 
     def repeat_game(self):
         OBJECTS = []
