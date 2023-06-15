@@ -10,6 +10,7 @@ class GameObject(pygame.sprite.Sprite):
         self.layer = layer
         self.x_scale = x_scale
         self.y_scale = y_scale
+        self.position = np.array([x, y])
         self.orientation = orientation
         self.__load_image(img_path)
         self.change_vals = False
@@ -38,6 +39,7 @@ class GameObject(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y)
 
     def add_position(self, x, y):
+        self.position = np.array([x, y])
         self.x = x
         self.y = y
 
@@ -48,6 +50,9 @@ class GameObject(pygame.sprite.Sprite):
 
     def give_rect(self):
         return self.rect
+    
+    def give_position(self):
+        return self.rect
 
     def destroy(self):
         pass
@@ -55,7 +60,7 @@ class GameObject(pygame.sprite.Sprite):
 
 class Domino(GameObject):
     def __init__(self, vals:list, **kwargs):
-        self.vals = vals
+        self.vals = np.array(vals)
 
         if vals[0] == vals[1]:
             self.acotao = True
@@ -72,7 +77,7 @@ class Domino(GameObject):
 
     def add_position(self, x, y):
         super().add_position(x, y)
-        self.position = [x, y]
+        self.position = super().give_rect()
 
     def view_horizontal(self):
         super().change_orientation(90)
@@ -84,8 +89,11 @@ class Domino(GameObject):
         super().change_orientation(180)
 
     def change_orientation_vals(self):
-        self.vals = [self.vals[1], self.vals[0]]
+        self.vals = np.array([self.vals[1], self.vals[0]])
         super().change_orientation(180)
+
+    def change_vals(self):
+        self.vals = np.array([self.vals[1], self.vals[0]])
 
     def update(self):
         super().update()
@@ -113,10 +121,13 @@ class Button(GameObject):
 
     def add_position(self, x, y):
         super().add_position(x, y)
-        self.position = [x, y]
+        self.position = super().give_rect()
 
     def change_orientation_sprite(self):
         super().change_orientation(180)
+
+    def activate(self):
+        self.add_position(9999, 9999)
 
     def deactivate(self):
         self.add_position(9999, 9999)
@@ -132,14 +143,14 @@ class Button(GameObject):
 class Player:
     def __init__(self, num, manual=True):
         self.num = num
-        self.dominoes = []
+        self.dominoes = np.array([])
         self.manual = manual
 
     def add_domino(self, domino):
-        self.dominoes.append(domino)
+        self.dominoes = np.append(self.dominoes, domino)
 
     def remove_all(self):
-        self.dominoes = []
+        self.dominoes = np.array([])
 
     def count_tiles(self):
         sum_of_dominoes = 0

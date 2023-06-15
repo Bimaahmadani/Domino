@@ -33,8 +33,7 @@ PLAYER_NUM_pos = (240, 599)
 WINDOW.blit(BACKGROUND, (0, 0))
 WINDOW.blit(PLAYER__, PLAYER__pos)
 
-#domino_test = Domino([1, 6], x=200, y=200)]
-OBJECTS = []#domino_test
+OBJECTS = []
 LAYERS = {0: Layer()}
 
 PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
@@ -45,8 +44,8 @@ FPS = 160
 class Table:
     def __init__(self):
         self.spacing = 95
-        self.dominoes = []
-        self.table_dominoes = []
+        self.dominoes = np.array([], dtype=object)
+        self.table_dominoes = np.array([], dtype=object)
 
         self.left_iterator = 0
         self.right_iterator = 0
@@ -61,17 +60,17 @@ class Table:
     def dominoes_distribution(self):
         for i in range(7):
             for j in range(i, 7):
-                self.dominoes.append(Domino((i, j)))
+                self.dominoes = np.append(self.dominoes, Domino((i, j)))
 
+        print(self.dominoes)
         for player in PLAYERS:
             for _ in range(7):
                 player.add_domino(self.draw_random())
     
     def draw_random(self):
-        return self.dominoes.pop(random.randint(0, len(self.dominoes)-1))
-    
-    def draw_by_position(self, position):
-        return self.dominoes.pop(position)
+        domino = np.random.choice(self.dominoes)
+        self.dominoes = np.delete(self.dominoes, np.where(self.dominoes == domino))
+        return domino
     
     def draw_player_number(self, player_number):
         global player_to_play
@@ -122,59 +121,55 @@ class Table:
     
     def create_right_positions(self):
         right_x, right_y = 795, 360
+
         self.right_positions.append([right_x, right_y])
         for _ in range(5):
             right_x, right_y = right_x + self.spacing, right_y
             self.right_positions.append([right_x, right_y])
         
-        right_x, right_y = right_x, right_y + self.spacing
-        self.right_positions.append([right_x, right_y])
-        for _ in range(3):
+        for _ in range(4):
             right_x, right_y = right_x, right_y + self.spacing
             self.right_positions.append([right_x, right_y])
 
-        right_x, right_y = right_x - self.spacing, right_y
-        self.right_positions.append([right_x, right_y])
-        for _ in range(5):
+        for _ in range(6):
             right_x, right_y = right_x - self.spacing, right_y
             self.right_positions.append([right_x, right_y])
 
-        right_x, right_y = right_x, right_y - self.spacing
-        self.right_positions.append([right_x, right_y])
-        for _ in range(2):
+        for _ in range(3):
             right_x, right_y = right_x, right_y - self.spacing
             self.right_positions.append([right_x, right_y])
 
+        for _ in range(6):
+            right_x, right_y = right_x + self.spacing, right_y
+            self.right_positions.append([right_x, right_y])
+
+        self.right_positions = np.array(self.right_positions)
+
     def create_left_positions(self):
         left_x, left_y = 605,360
+
         self.left_positions.append([left_x, left_y])
         for _ in range(5):
             left_x, left_y = left_x - self.spacing, left_y
             self.left_positions.append([left_x, left_y])
             
-        left_x, left_y = left_x, left_y - self.spacing
-        self.left_positions.append([left_x, left_y])
-        for _ in range(2):
+        for _ in range(3):
             left_x, left_y = left_x, left_y - self.spacing
             self.left_positions.append([left_x, left_y])
 
-        left_x, left_y = left_x + self.spacing, left_y
-        self.left_positions.append([left_x, left_y])
-        for _ in range(9):
+        for _ in range(10):
             left_x, left_y = left_x + self.spacing, left_y
             self.left_positions.append([left_x, left_y])
 
-        left_x, left_y = left_x, left_y + self.spacing
-        self.left_positions.append([left_x, left_y])
-        for _ in range(2):
+        for _ in range(3):
             left_x, left_y = left_x, left_y + self.spacing
             self.left_positions.append([left_x, left_y])
             
-        left_x, left_y = left_x - self.spacing, left_y
-        self.left_positions.append([left_x, left_y])
-        for _ in range(9):
+        for _ in range(10):
             left_x, left_y = left_x - self.spacing, left_y
             self.left_positions.append([left_x, left_y])
+
+        self.left_positions = np.array(self.left_positions)
 
     def can_be_put(self, domino):
         if self.is_empty():
@@ -200,7 +195,7 @@ class Table:
                 domino.view_horizontal()
 
             if self.side == "none":
-                self.table_dominoes.insert(0, domino)
+                self.table_dominoes = np.insert(self.table_dominoes, 0, domino)
                 domino.add_position(700, 360)
 
             if self.side == "left" and domino.vals[1] != self.table_dominoes[0].vals[0] or self.side == "right" and domino.vals[0] != self.table_dominoes[-1].vals[-1]:
@@ -220,19 +215,19 @@ class Table:
             domino.change_orientation_vals()
 
         if side == "both":
-            table1 = fake_table.insert(0, domino)
-            table2 = fake_table.append(domino)
+            table1 = np.insert(fake_table, 0, domino)
+            table2 = np.append(fake_table, domino)
             return table1, table2
 
         else:
             if side == "none":
-                fake_table.insert(0, domino)
+                fake_table = np.insert(fake_table, 0, domino)
 
             if side == "left":
-                fake_table.insert(0, domino)
+                fake_table = np.insert(fake_table, 0, domino)
 
             if side == "right":
-                fake_table.append(domino)
+                fake_table = np.append(fake_table, domino)
 
             return fake_table, None
 
@@ -269,7 +264,7 @@ class Table:
         elif self.left_iterator >= 8:
             domino.change_orientation_sprite()
 
-        self.table_dominoes.insert(0, domino)
+        self.table_dominoes = np.insert(self.table_dominoes, 0, domino)
         x, y = self.left_positions[self.left_iterator][0], self.left_positions[self.left_iterator][1]
         domino.add_position(x, y)
 
@@ -289,7 +284,7 @@ class Table:
         elif self.right_iterator >= 17:
             domino.change_orientation_sprite()
 
-        self.table_dominoes.append(domino)
+        self.table_dominoes = np.append(self.table_dominoes, domino)
         x, y = self.right_positions[self.right_iterator][0], self.right_positions[self.right_iterator][1]
         domino.add_position(x, y)
 
@@ -371,8 +366,9 @@ class Table:
                         if domino.click_me():
                             if self.can_be_put(domino):
                                 self.add_domino_to_table(domino)
-                                PLAYERS[player_idx].dominoes.remove(domino)
+                                PLAYERS[player_idx].dominoes = np.delete(PLAYERS[player_idx].dominoes, np.where(PLAYERS[player_idx].dominoes == domino))
                                 played = True
+
                             else:
                                 print("!!")
 
@@ -410,38 +406,39 @@ class Table:
 
     def childrens(self, computer_idx):
         playable_dominoes = self.check_computer_dominoes(computer_idx)
-        childrens = []
+        childrens = np.array([])
 
         for domino, side in playable_dominoes:
             child_state = self.table_dominoes.copy()
             child1, child2 = self.add_domino_to_fake_table(child_state, domino, side)
             
-            childrens.append(child1)
+            childrens = np.append(childrens, child1)
             if child2 != None:
-                childrens.append(child2)
+                childrens = np.append(childrens, child2)
 
         return childrens
-
-    def computer_plays(self, computer_idx):
-        childrens = self.childrens(computer_idx)
-        print(childrens)
-        return True
     
     def check_computer_dominoes(self, computer_idx):
-        playable_dominoes = []
+        playable_dominoes = np.array([])
         for domino in PLAYERS[computer_idx].dominoes:
             left = table.table_dominoes[0].vals[0]
             right = table.table_dominoes[-1].vals[-1]
 
             if left in domino.vals:
-                playable_dominoes.append([domino, "left"])
+                playable_dominoes = np.append(playable_dominoes, np.array([domino, "left"]))
+
             if right in domino.vals:
-                playable_dominoes.append([domino, "right"])
+                playable_dominoes = np.append(playable_dominoes, np.array([domino, "right"]))
 
             if right in domino.vals and left in domino.vals:
-                playable_dominoes.append([domino, "both"])
+                playable_dominoes = np.append(playable_dominoes, np.array([domino, "both"]))
 
         return playable_dominoes
+
+    def computer_plays(self, computer_idx):
+        childrens = self.childrens(computer_idx)
+        print(childrens)
+        return True
 
     def repeat_game(self):
         OBJECTS = []
@@ -450,8 +447,8 @@ class Table:
         for player in PLAYERS:
             player.remove_all()
 
-        self.dominoes = []
-        self.table_dominoes = []
+        self.dominoes = np.array([])
+        self.table_dominoes = np.array([])
         self.left_iterator = 0
         self.right_iterator = 0
 
@@ -611,7 +608,7 @@ def main():
             if TURN >= PLAYERS_NUM:
                 TURN = 0
 
-        if table.dominoes == []:
+        if len(table.dominoes) == 0:
             gameManager.possibility_of_lock_the_game = True
 
         update_layers()
