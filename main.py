@@ -11,11 +11,10 @@ import sys
 pygame.init()
 WIDTH, HEIGHT = 1400, 800
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
-GREEN_SCREEN_BKG = ( 0, 187, 45 )
 
 pygame.display.set_caption('Dominó!')
 
-ICON = pygame.image.load("assets/Domino (icon).png").convert()
+ICON = pygame.image.load("assets/Domino (icon).png").convert_alpha()
 pygame.display.set_icon(ICON)
 
 PLAYERS_NUM = 2
@@ -24,9 +23,8 @@ if PLAYERS_NUM < 2:
 elif PLAYERS_NUM > 4:
     PLAYERS_NUM = 4
 
-BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert()
-PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert()
-PLAYER__.set_colorkey( GREEN_SCREEN_BKG )
+BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
+PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert_alpha()
 
 SLEEP_TIME = .2
 PLAYER__pos = (26, 606)
@@ -40,7 +38,7 @@ OBJECTS = []#domino_test
 LAYERS = {0: Layer()}
 
 PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
-PLAYERS[1].change_auto()
+#PLAYERS[1].change_auto()
 FPS = 160
 
 
@@ -77,8 +75,7 @@ class Table:
     
     def draw_player_number(self, player_number):
         global player_to_play
-        player_to_play = pygame.image.load(f"assets/Dominos (Interface)/{player_number + 1}p.png").convert()
-        player_to_play.set_colorkey( GREEN_SCREEN_BKG )
+        player_to_play = pygame.image.load(f"assets/Dominos (Interface)/{player_number + 1}p.png").convert_alpha()
         WINDOW.blit(player_to_play, PLAYER_NUM_pos)
         update_layers()
 
@@ -197,7 +194,6 @@ class Table:
     
     def add_domino_to_table(self, domino):
         if self.side != "both":
-
             if domino.acotao:
                 domino.view_vertical()
             else:
@@ -308,11 +304,8 @@ class Table:
             if dominoes_amount >= 7:
                 dominoes_amount = 7
 
-            num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{dominoes_amount}.png").convert()
-            num_dominoes.set_colorkey( GREEN_SCREEN_BKG )
-
-            player_num = pygame.image.load(f"assets/Dominos (Interface)/{player + 1}p.png").convert()
-            player_num.set_colorkey( GREEN_SCREEN_BKG )
+            num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{dominoes_amount}.png").convert_alpha()
+            player_num = pygame.image.load(f"assets/Dominos (Interface)/{player + 1}p.png").convert_alpha()
 
             WINDOW.blit(num_dominoes, (x, y))
             WINDOW.blit(player_num, (num_x, num_y))

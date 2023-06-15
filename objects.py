@@ -1,7 +1,6 @@
+import numpy as np
 import pygame
 import os
-
-GREEN_SCREEN_BKG = ( 0, 187, 45 )
 
 class GameObject(pygame.sprite.Sprite):
     def __init__(self, x=0, y=0, layer=0, x_scale=1, y_scale=1, orientation=0, img_path=os.path.join("assets", "empty.png")):
@@ -19,22 +18,21 @@ class GameObject(pygame.sprite.Sprite):
         self.change_vals = False
 
         try:
-            self.image = pygame.image.load(path).convert()
+            self.image = pygame.image.load(path).convert_alpha()
         except:
             path = change_vals(path, 22, 24)
-            self.image = pygame.image.load(path).convert()
+            self.image = pygame.image.load(path).convert_alpha()
             self.change_vals = True
 
         self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
         self.image = pygame.transform.rotate(self.image, self.orientation)
-        self.image.set_colorkey( GREEN_SCREEN_BKG )
         self.rect = self.image.get_rect()
 
         if self.change_vals:
             self.change_orientation(180)
 
     def update_image(self, path):
-        self.image = pygame.image.load(path).convert()
+        self.image = pygame.image.load(path).convert_alpha()
 
     def update(self):
         self.rect.center = (self.x, self.y)
