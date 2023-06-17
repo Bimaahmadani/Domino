@@ -1,5 +1,6 @@
 import numpy as np
 import pygame
+import time
 import os
 
 class GameObject(pygame.sprite.Sprite):
@@ -35,8 +36,16 @@ class GameObject(pygame.sprite.Sprite):
     def update_image(self, path):
         self.image = pygame.image.load(path).convert_alpha()
 
+    def __refresh_sprite(self):
+        self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
+        self.rect = self.image.get_rect()
+
     def update(self):
-        self.rect.center = (self.x, self.y)
+        self.__refresh_sprite()
+        self.rect.center = (self.x, self.y) 
+
+    def is_colliding(self, position):
+        return self.rect.collidepoint(position)
 
     def add_position(self, x, y):
         self.position = np.array([x, y])
@@ -52,7 +61,7 @@ class GameObject(pygame.sprite.Sprite):
         return self.rect
     
     def give_position(self):
-        return self.rect
+        return self.x, self.y
 
     def destroy(self):
         pass
@@ -61,6 +70,10 @@ class GameObject(pygame.sprite.Sprite):
 class Domino(GameObject):
     def __init__(self, vals:list, **kwargs):
         self.vals = np.array(vals)
+        self.placed = False
+        self.empty = False
+        self.extra = False
+        self.jump = True
 
         if vals[0] == vals[1]:
             self.acotao = True
@@ -68,16 +81,19 @@ class Domino(GameObject):
             self.acotao = False
 
         if vals == [7, 7]:
+            self.in_screen = True
             self.path = "_.png"
+            self.extra = True
+
         else:
             self.path = f"{vals[0]}-{vals[1]}.png"
+            self.in_screen = False
 
         super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=0, **kwargs)
         self.rect = super().give_rect()
 
     def add_position(self, x, y):
         super().add_position(x, y)
-        self.position = super().give_rect()
 
     def view_horizontal(self):
         super().change_orientation(90)
@@ -95,8 +111,37 @@ class Domino(GameObject):
     def change_vals(self):
         self.vals = np.array([self.vals[1], self.vals[0]])
 
+    def domino_placed(self):
+        self.placed = True
+
     def update(self):
-        super().update()
+        if super().is_colliding(pygame.mouse.get_pos()) and self.placed == False and self.in_screen == True:
+            if self.empty:
+                self.placed = True
+                self.jump = False
+
+            if self.jump:
+                self.on_hover()
+        
+        else:
+            super().update()
+            self.jump = True
+
+        if self.extra and self.empty != True:
+            self.x = 548
+            self.y = 717
+
+    def extra_dominoes_is_empty(self):
+        self.empty = True
+
+    def on_hover(self):
+        pixels_to_move = 2
+        self.y -= pixels_to_move
+
+        new_height = self.rect.height + pixels_to_move*2
+        self.rect.height = new_height
+        self.rect.center = (self.x, self.y)
+        self.jump = False
 
     def sum_vals(self):
         return int(self.vals[0]) + int(self.vals[1])
@@ -115,6 +160,8 @@ class Domino(GameObject):
 class Button(GameObject):
     def __init__(self, path):
         self.path = path
+        self.arrow = False
+        self.side = ""
         self.position = None
         super().__init__(img_path=os.path.join("assets", "Dominos (Interface)", self.path), x_scale=1, y_scale=1, orientation=0)
         self.rect = super().give_rect()
@@ -131,6 +178,16 @@ class Button(GameObject):
 
     def deactivate(self):
         self.add_position(9999, 9999)
+
+    def update(self):
+        if super().is_colliding(pygame.mouse.get_pos()) and self.arrow != True:
+            self.on_hover()
+
+        super().update()
+
+    def on_hover(self):
+        pass
+
 
     def click_me(self):
         mouse_position = pygame.mouse.get_pos()
