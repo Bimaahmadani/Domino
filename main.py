@@ -1,5 +1,5 @@
-from pygame.sprite import Group as Layer
 from objects import Domino, Player, Button
+from pygame.sprite import Group as Layer
 from pygame.locals import *
 import numpy as np
 import pygame
@@ -35,7 +35,7 @@ LAYERS = {0: Layer()}
 
 PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
 #PLAYERS[1].change_auto()
-FPS = 160
+FPS = 60
 
 
 class Table:
@@ -136,11 +136,18 @@ class Table:
             right_x -= self.spacing
             self.right_positions.append([right_x, right_y])
 
-        for _ in range(3):
+        for _ in range(2):
             right_y -= self.spacing
             self.right_positions.append([right_x, right_y])
 
         for _ in range(6):
+            right_x -= self.spacing
+            self.right_positions.append([right_x, right_y])
+
+        right_y -= self.spacing
+        self.right_positions.append([right_x, right_y])
+
+        for _ in range(5):
             right_x += self.spacing
             self.right_positions.append([right_x, right_y])
 
@@ -162,11 +169,11 @@ class Table:
             left_x += self.spacing
             self.left_positions.append([left_x, left_y])
 
-        for _ in range(3):
+        for _ in range(2):
             left_y += self.spacing
             self.left_positions.append([left_x, left_y])
             
-        for _ in range(10):
+        for _ in range(8):
             left_x -= self.spacing
             self.left_positions.append([left_x, left_y])
 
@@ -275,9 +282,15 @@ class Table:
             domino.change_orientation_sprite()
             domino.view_horizontal()
 
-        elif self.left_iterator >= 8:
+        elif self.left_iterator >= 8 and self.left_iterator <= 18:
             domino.change_orientation_sprite()
 
+        elif self.left_iterator >= 18 and self.left_iterator <= 19:
+            domino.view_horizontal()
+        
+        elif self.left_iterator >= 19:
+            domino.view_vertical()
+            
         self.table_dominoes = np.insert(self.table_dominoes, 0, domino)
         x, y = self.left_positions[self.left_iterator][0], self.left_positions[self.left_iterator][1]
         domino.add_position(x, y)
@@ -286,18 +299,24 @@ class Table:
 
     def right_placement(self, domino):
         domino.change_orientation_sprite()
-        if self.right_iterator >= 6 and self.right_iterator <= 8:
+        if self.right_iterator >= 6 and self.right_iterator <= 9:
             domino.change_orientation_sprite()
             domino.view_horizontal()
 
-        elif self.right_iterator >= 8 and self.right_iterator <= 15:
+        elif self.right_iterator >= 9 and self.right_iterator <= 15:
             domino.change_orientation_sprite()
 
         elif self.right_iterator >= 15 and self.right_iterator <= 17:
             domino.view_horizontal()
 
-        elif self.right_iterator >= 17:
+        elif self.right_iterator >= 17 and self.right_iterator <= 23:
             domino.change_orientation_sprite()
+        
+        elif self.right_iterator >= 23 and self.right_iterator <= 24:
+            domino.view_horizontal()
+
+        elif self.right_iterator >= 24:
+            domino.view_vertical()
 
         self.table_dominoes = np.append(self.table_dominoes, domino)
         x, y = self.right_positions[self.right_iterator][0], self.right_positions[self.right_iterator][1]
@@ -475,7 +494,7 @@ class Table:
 
         if PLAYERS_NUM < 4:
             self.draw_extra_dominoes()
-    
+
     def __repr__(self):
         return str(self.table_dominoes)
 

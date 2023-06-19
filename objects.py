@@ -1,6 +1,5 @@
 import numpy as np
 import pygame
-import time
 import os
 
 class GameObject(pygame.sprite.Sprite):
