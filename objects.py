@@ -13,10 +13,12 @@ class GameObject(pygame.sprite.Sprite):
         self.y_scale = y_scale
         self.position = np.array([x, y])
         self.orientation = orientation
-        self.__load_image(img_path)
+        self.load_image(img_path)
+        self.image_path = img_path
+        self.blank_path = os.path.join("assets", "Dominos (Interface)", "0.png")
         self.change_vals = False
 
-    def __load_image(self, path):
+    def load_image(self, path):
         self.change_vals = False
 
         try:
@@ -36,16 +38,25 @@ class GameObject(pygame.sprite.Sprite):
     def update_image(self, path):
         self.image = pygame.image.load(path).convert_alpha()
 
-    def __refresh_sprite(self):
+    def refresh_sprite(self):
         self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
         self.rect = self.image.get_rect()
 
     def update(self):
-        self.__refresh_sprite()
+        self.refresh_sprite()
         self.rect.center = (self.x, self.y) 
 
     def is_colliding(self, position):
         return self.rect.collidepoint(position)
+    
+    def change_sprite(self, path):
+        self.load_image(path)
+    
+    def hide(self):
+        self.load_image(self.blank_path)
+
+    def show(self):
+        self.load_image(self.image_path)
 
     def add_position(self, x, y):
         self.position = np.array([x, y])
@@ -114,7 +125,16 @@ class Domino(GameObject):
     def domino_placed(self):
         self.placed = True
 
+    def show(self):
+        self.in_screen = True
+        super().show()
+
+    def hide(self):
+        self.in_screen = False
+        super().hide()
+
     def update(self):
+        x, y = super().give_position()
         if super().is_colliding(pygame.mouse.get_pos()) and self.placed == False and self.in_screen == True:
             if self.empty:
                 self.placed = True
@@ -127,9 +147,7 @@ class Domino(GameObject):
             super().update()
             self.jump = True
 
-        if self.extra and self.empty != True:
-            self.x = 548
-            self.y = 717
+        self.x, self.y = x, y
 
     def extra_dominoes_is_empty(self):
         self.empty = True
@@ -147,11 +165,12 @@ class Domino(GameObject):
         return int(self.vals[0]) + int(self.vals[1])
 
     def click_me(self):
-        mouse_position = pygame.mouse.get_pos()
-        if self.rect.collidepoint(mouse_position):
-            return True
-        else:
-            return False
+        if self.in_screen:
+            mouse_position = pygame.mouse.get_pos()
+            if self.rect.collidepoint(mouse_position):
+                return True
+            else:
+                return False
 
     def __repr__(self):
         return str(list(self.vals))
@@ -159,42 +178,46 @@ class Domino(GameObject):
 
 class Button(GameObject):
     def __init__(self, path):
-        self.path = path
+        self.path1 = path
+        self.path2 = path.replace("1", "2")
         self.arrow = False
-        self.side = ""
         self.position = None
-        super().__init__(img_path=os.path.join("assets", "Dominos (Interface)", self.path), x_scale=1, y_scale=1, orientation=0)
+        self.in_screen = False
+
+        super().__init__(img_path=os.path.join("assets", "Dominos (Interface)", self.path1), x_scale=1, y_scale=1, orientation=0)
         self.rect = super().give_rect()
 
     def add_position(self, x, y):
         super().add_position(x, y)
-        self.position = super().give_rect()
 
     def change_orientation_sprite(self):
         super().change_orientation(180)
 
     def activate(self):
-        self.add_position(9999, 9999)
+        self.in_screen = True
+        super().show()
 
     def deactivate(self):
-        self.add_position(9999, 9999)
+        self.in_screen = False
+        super().hide()
 
     def update(self):
-        if super().is_colliding(pygame.mouse.get_pos()) and self.arrow != True:
-            self.on_hover()
+        if self.in_screen:
+            if super().is_colliding(pygame.mouse.get_pos()):
+                super().change_sprite(os.path.join("assets", "Dominos (Interface)", self.path2))
 
+            else:
+                super().change_sprite(os.path.join("assets", "Dominos (Interface)", self.path1))  
+            
         super().update()
 
-    def on_hover(self):
-        pass
-
-
     def click_me(self):
-        mouse_position = pygame.mouse.get_pos()
-        if self.rect.collidepoint(mouse_position):
-            return True
-        else:
-            return False
+        if self.in_screen:
+            mouse_position = pygame.mouse.get_pos()
+            if self.rect.collidepoint(mouse_position):
+                return True
+            else:
+                return False
 
 
 class Player:

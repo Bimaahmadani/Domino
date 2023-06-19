@@ -3,7 +3,6 @@ from objects import Domino, Player, Button
 from pygame.locals import *
 import numpy as np
 import pygame
-import random
 import time
 import sys
 
@@ -53,8 +52,8 @@ class Table:
 
         self.last_player = None
         self.extra_dominoes = None
-        self.left_arrow = Button("arrow.png")
-        self.right_arrow = Button("arrow.png")
+        self.left_arrow = Button("arrow1.png")
+        self.right_arrow = Button("arrow1.png")
         self.left_arrow_orientation = True
 
     def dominoes_distribution(self):
@@ -78,9 +77,6 @@ class Table:
         update_layers()
 
     def draw_player_dominoes(self, player_idx):
-        if self.last_player != player_idx:
-            self.erase_player_dominoes(player_idx)
-
         x_padding = 68
         y_padding = 160
 
@@ -88,11 +84,11 @@ class Table:
         aux = 1
 
         for domino in PLAYERS[player_idx].dominoes:
-            domino.add_position(x, y)
-            domino.in_screen = True
-            
             if domino not in OBJECTS:
                 OBJECTS.append(domino)
+
+            domino.add_position(x, y)
+            domino.show()
 
             if aux == 7:
                 x, y = 64, 717
@@ -107,13 +103,11 @@ class Table:
             aux += 1 
 
     def erase_player_dominoes(self, player_idx):
-        self.last_player = player_idx
         players = [index for index, player in enumerate(PLAYERS) if index != player_idx]
 
         for player in players:
             for domino in PLAYERS[player].dominoes:
-                domino.add_position(9999, 9999)
-                domino.in_screen = False
+                domino.hide()
 
     def draw_extra_dominoes(self):
         self.extra_dominoes = Domino([7, 7], x=548, y=717)
@@ -121,7 +115,7 @@ class Table:
 
     def hide_extra_dominoes(self):
         self.extra_dominoes.extra_dominoes_is_empty()
-        self.extra_dominoes.add_position(9999, 9999)
+        self.extra_dominoes.hide()
 
     def is_empty(self):
         return len(self.table_dominoes) == 0
@@ -203,6 +197,7 @@ class Table:
 
             if self.side == "none":
                 self.table_dominoes = np.insert(self.table_dominoes, 0, domino)
+                domino.change_orientation_sprite()
                 domino.add_position(700, 360)
 
             if self.side == "left" and domino.vals[1] != self.table_dominoes[0].vals[0] or self.side == "right" and domino.vals[0] != self.table_dominoes[-1].vals[-1]:
@@ -269,10 +264,13 @@ class Table:
                         pygame.quit()
                         sys.exit()
 
+            update_layers()
+
         self.add_domino_to_table(domino)
         self.deactivate_arrows()
 
     def left_placement(self, domino):
+        domino.change_orientation_sprite()
         if self.left_iterator >= 6 and self.left_iterator <= 8:
             domino.change_orientation_sprite()
             domino.view_horizontal()
@@ -287,6 +285,7 @@ class Table:
         self.left_iterator += 1
 
     def right_placement(self, domino):
+        domino.change_orientation_sprite()
         if self.right_iterator >= 6 and self.right_iterator <= 8:
             domino.change_orientation_sprite()
             domino.view_horizontal()
@@ -331,14 +330,14 @@ class Table:
 
         self.right_arrow.add_position(576, 636)
         self.left_arrow.add_position(476, 636)
+        self.right_arrow.activate()
+        self.left_arrow.activate()
 
         if self.left_arrow not in OBJECTS and self.right_arrow not in OBJECTS:
             OBJECTS.insert(1, self.left_arrow)
             OBJECTS.insert(2, self.right_arrow)
             self.left_arrow.arrow = True
             self.right_arrow.arrow = True
-            self.left_arrow.side = "left"
-            self.right_arrow.side = "right"
 
     def deactivate_arrows(self):
         self.right_arrow.deactivate()
@@ -350,10 +349,10 @@ class Table:
         global FULLSCREEN
         global EXIT
 
-        PASS = Button("PASS_button.png")
-        REPEAT = Button("REPEAT_button.png")
-        FULLSCREEN = Button("FULLSCREEN_button.png")
-        EXIT = Button("EXIT_button.png")
+        PASS = Button("PASS_button1.png")
+        REPEAT = Button("REPEAT_button1.png")
+        FULLSCREEN = Button("FULLSCREEN_button1.png")
+        EXIT = Button("EXIT_button1.png")
 
         x, y = 598, 678
         buttons = [PASS, REPEAT, FULLSCREEN, EXIT]
@@ -363,10 +362,13 @@ class Table:
             y += 26
 
         for button in buttons:
+            button.activate()
             if button not in OBJECTS:
                 OBJECTS.append(button)
 
     def player_plays(self, player_idx):
+        self.erase_player_dominoes(player_idx)
+        self.draw_player_dominoes(player_idx)
         played = False
 
         while played != True:
@@ -391,6 +393,7 @@ class Table:
 
                     if self.extra_dominoes.click_me():
                         PLAYERS[player_idx].add_domino(self.draw_random())
+                        self.draw_player_dominoes(player_idx)
 
                     if PASS.click_me():
                         played = True
@@ -406,7 +409,6 @@ class Table:
                         pygame.quit()
                         sys.exit()
 
-            self.draw_player_dominoes(player_idx)
             update_layers()
 
         time.sleep(SLEEP_TIME)
@@ -606,7 +608,6 @@ def main():
 
         if PLAYERS[TURN].manual:
             table.draw_player_number(TURN)
-            table.draw_player_dominoes(TURN)
             played = table.player_plays(TURN)
 
         else:
