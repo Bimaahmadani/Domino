@@ -758,10 +758,13 @@ def main():
                 domino_idx = int(np.where(PLAYERS[TURN].dominoes == domino)[0])
                 domino_to_play = PLAYERS[TURN].dominoes[domino_idx]
 
-                if idx <= 0:
+                if len(state.fake_table) == 0:
+                    table.add_domino_to_table(domino_to_play, "none")
+
+                elif idx <= 0 and len(state.fake_table) != 0:
                     table.add_domino_to_table(domino_to_play, "left")
 
-                if idx >= 1:
+                elif idx >= 1 and len(state.fake_table) != 0:
                     table.add_domino_to_table(domino_to_play, "right")
 
                 PLAYERS[TURN].dominoes = np.delete(PLAYERS[TURN].dominoes, np.where(PLAYERS[TURN].dominoes == domino))
