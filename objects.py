@@ -102,6 +102,19 @@ class Domino(GameObject):
         super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=0, **kwargs)
         self.rect = super().give_rect()
 
+    def __copy__(self):
+        new_instance = Domino(list(self.vals))
+        new_instance.placed = self.placed
+        new_instance.empty = self.empty
+        new_instance.extra = self.extra
+        new_instance.jump = self.jump
+        new_instance.acotao = self.acotao
+        new_instance.in_screen = self.in_screen
+        new_instance.path = self.path
+        new_instance.rect = self.rect.copy()
+
+        return new_instance
+
     def add_position(self, x, y):
         super().add_position(x, y)
 
@@ -116,7 +129,7 @@ class Domino(GameObject):
 
     def change_orientation_vals(self):
         self.vals = np.array([self.vals[1], self.vals[0]])
-        super().change_orientation(180)
+        self.change_orientation_sprite()
 
     def change_vals(self):
         self.vals = np.array([self.vals[1], self.vals[0]])

@@ -34,7 +34,7 @@ OBJECTS = []
 LAYERS = {0: Layer()}
 
 PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
-#PLAYERS[1].change_auto()
+PLAYERS[1].change_auto()
 FPS = 60
 
 
@@ -106,8 +106,9 @@ class Table:
         players = [index for index, player in enumerate(PLAYERS) if index != player_idx]
 
         for player in players:
-            for domino in PLAYERS[player].dominoes:
-                domino.hide()
+            if PLAYERS[player].manual:
+                for domino in PLAYERS[player].dominoes:
+                    domino.hide()
 
     def draw_extra_dominoes(self):
         self.extra_dominoes = Domino([7, 7], x=548, y=717)
@@ -195,7 +196,10 @@ class Table:
 
         return left in domino.vals or right in domino.vals
     
-    def add_domino_to_table(self, domino):
+    def add_domino_to_table(self, domino, side=None):
+        if side is not None:
+            self.side = side
+
         if self.side != "both":
             if domino.acotao:
                 domino.view_vertical()
@@ -220,27 +224,6 @@ class Table:
         
         else:
             self.choose_side(domino)
-
-    def add_domino_to_fake_table(self, fake_table, domino, side):
-        if side == "left" and domino.vals[1] != fake_table[0].vals[0] or side == "right" and domino.vals[0] != fake_table[-1].vals[-1]:
-            domino.change_orientation_vals()
-
-        if side == "both":
-            table1 = np.insert(fake_table, 0, domino)
-            table2 = np.append(fake_table, domino)
-            return table1, table2
-
-        else:
-            if side == "none":
-                fake_table = np.insert(fake_table, 0, domino)
-
-            if side == "left":
-                fake_table = np.insert(fake_table, 0, domino)
-
-            if side == "right":
-                fake_table = np.append(fake_table, domino)
-
-            return fake_table, None
 
     def choose_side(self, domino):
         self.activate_arrows()
@@ -433,42 +416,6 @@ class Table:
         time.sleep(SLEEP_TIME)
         return played
 
-    def childrens(self, computer_idx):
-        playable_dominoes = self.check_computer_dominoes(computer_idx)
-        childrens = np.array([])
-
-        for domino, side in playable_dominoes:
-            child_state = self.table_dominoes.copy()
-            child1, child2 = self.add_domino_to_fake_table(child_state, domino, side)
-            
-            childrens = np.append(childrens, child1)
-            if child2 != None:
-                childrens = np.append(childrens, child2)
-
-        return childrens
-    
-    def check_computer_dominoes(self, computer_idx):
-        playable_dominoes = np.array([])
-        for domino in PLAYERS[computer_idx].dominoes:
-            left = table.table_dominoes[0].vals[0]
-            right = table.table_dominoes[-1].vals[-1]
-
-            if left in domino.vals:
-                playable_dominoes = np.append(playable_dominoes, np.array([domino, "left"]))
-
-            if right in domino.vals:
-                playable_dominoes = np.append(playable_dominoes, np.array([domino, "right"]))
-
-            if right in domino.vals and left in domino.vals:
-                playable_dominoes = np.append(playable_dominoes, np.array([domino, "both"]))
-
-        return playable_dominoes
-
-    def computer_plays(self, computer_idx):
-        childrens = self.childrens(computer_idx)
-        print(childrens)
-        return True
-
     def repeat_game(self):
         OBJECTS = []
         LAYERS = {0: Layer()}
@@ -495,8 +442,89 @@ class Table:
         if PLAYERS_NUM < 4:
             self.draw_extra_dominoes()
 
+    def return_state(self):
+        return self.table_dominoes
+
     def __repr__(self):
         return str(self.table_dominoes)
+
+
+class Fake_Table():
+    def __init__(self, state=None):
+        if state is not None: 
+            self.fake_table = state
+
+        else: 
+            self.fake_table = np.array([], dtype=object)
+        
+    def childrens(self, computer_idx):
+        playable_dominoes = self.check_computer_dominoes(computer_idx)
+        childrens = []
+
+        for domino, side in playable_dominoes:
+            child_state = list(self.fake_table.copy())
+            child = self.add_domino_to_fake_table(child_state, domino, side)
+            childrens.append(Fake_Table(state=child))
+
+        return childrens
+    
+    def check_computer_dominoes(self, computer_idx):
+        playable_dominoes = []
+        for domino in PLAYERS[computer_idx].dominoes:
+            if self.is_empty():
+                playable_dominoes.append([domino, "none"])
+                continue
+        
+            left = self.fake_table[0].vals[0]
+            right = self.fake_table[-1].vals[-1]
+
+            if left in domino.vals and right not in domino.vals:
+                playable_dominoes.append([domino, "left"])
+
+            if right in domino.vals and left not in domino.vals:
+                playable_dominoes.append([domino, "right"])
+
+            if right in domino.vals and left in domino.vals:
+                domino_copy = domino.__copy__()
+                playable_dominoes.append([domino, "right"])
+                playable_dominoes.append([domino_copy, "left"])
+
+        return playable_dominoes
+    
+    def add_domino_to_fake_table(self, fake_table, domino, side):
+        if side == "left" and domino.vals[1] != fake_table[0].vals[0]:
+            domino.change_orientation_vals()
+            fake_table.insert(0, domino)
+
+        elif side == "left":
+            fake_table.insert(0, domino)
+
+        if side == "right" and domino.vals[0] != fake_table[-1].vals[-1]:
+            domino.change_orientation_vals()
+            fake_table.append(domino)
+
+        elif side == "right":
+            fake_table.append(domino)
+
+        if side == "none":
+            fake_table.append(domino)
+        
+        return fake_table
+    
+    def heuristic(self, computer_idx):
+        heuristic = 0
+
+        playable_dominoes = self.check_computer_dominoes(computer_idx)
+        if len(playable_dominoes) >= 1:
+            heuristic += 1
+
+        return heuristic
+
+    def is_empty(self):
+        return len(self.fake_table) == 0
+
+    def __repr__(self):
+        return str(self.fake_table)
 
 
 class GameManager():
@@ -509,11 +537,13 @@ class GameManager():
 
     def check_game_status(self, last_turn):
         players_without_dominos = 0
+        terminal_val = None
 
         for player in PLAYERS:
             winner = self.check_for_winner(player)
 
             if winner:
+                terminal_val = player
                 self.win(player)
                 
             if self.possibility_of_lock_the_game:
@@ -524,7 +554,15 @@ class GameManager():
                     players_without_dominos += 1
 
             if players_without_dominos >= PLAYERS_NUM:
-                self.game_locked(last_turn)
+                result = self.game_locked(last_turn)
+                return result
+
+        if terminal_val == PLAYERS[last_turn]:
+            return 1
+        elif terminal_val is not None:
+            return -1
+        else:
+            return terminal_val
 
     def game_locked(self, last_turn):
         player1 = PLAYERS[last_turn].count_tiles()
@@ -535,16 +573,25 @@ class GameManager():
 
         if player1 < player2:
             self.win(PLAYERS[last_turn])
+            return 1
+        
         elif player1 > player2:
             try:
                 self.win(PLAYERS[last_turn + 1])
+                return -1
+            
             except:
                 self.win(PLAYERS[0])
+                return -1
+            
         else:
             try:
                 self.win(PLAYERS[last_turn + 1])
+                return -1
+            
             except:
                 self.win(PLAYERS[0])
+                return -1  
 
     def check_player_dominoes(self, player):
         if len(table.table_dominoes) == 0:
@@ -585,6 +632,62 @@ class GameManager():
         self.You_Win = False
 
 
+class MinimaxSolver():
+    def __init__(self, max_depth=3, ts=None, max_time=None, timeit=False):
+        self.max_depth = max_depth
+        self.ts = ts
+        self.max_time = max_time
+        self.timeit = timeit
+
+    def solve(self, state, computer_idx):
+        max_child, _ = self.__maximize(state, -np.inf, np.inf, computer_idx, 0)
+        return max_child
+
+    def __maximize(self, state, alpha, beta, computer_idx, depth):
+        terminal_val = gameManager.check_game_status(computer_idx)
+
+        if terminal_val is not None:
+            return (None, terminal_val)
+        
+        if depth >= self.max_depth:
+            return (None, state.heuristic(computer_idx))
+        
+        max_child, max_utility = (None, -np.inf)
+        for child in state.childrens(computer_idx):
+            _, utility = self.__minimize(child, alpha, beta, computer_idx, depth + 1)
+
+            if utility > max_utility:
+                max_child, max_utility = child, utility
+
+            if utility >= beta:
+                break
+
+            alpha = max(alpha, max_utility)
+        return max_child, max_utility
+    
+    def __minimize(self, state, alpha, beta, computer_idx, depth):
+        terminal_val = gameManager.check_game_status(computer_idx)
+
+        if terminal_val is not None:
+            return (None, terminal_val)
+        
+        if depth >= self.max_depth:
+            return (None, state.heuristic(computer_idx))
+        
+        min_child, min_utility = (None, np.inf)
+        for child in state.childrens(computer_idx):
+            _, utility = self.__maximize(child, alpha, beta, computer_idx, depth + 1)
+
+            if utility < min_utility:
+                min_child, min_utility = child, utility
+
+            if utility < alpha:
+                break
+
+            beta = min(beta, min_utility)
+        return min_child, min_utility
+
+
 def update_layers():
     WINDOW.blit(BACKGROUND, (0, 0))
     WINDOW.blit(PLAYER__, PLAYER__pos)
@@ -605,7 +708,16 @@ def update_layers():
     pygame.display.update() 
 
 
+def add_layers(domino):
+    if domino not in OBJECTS:
+        domino.change_orientation_sprite()
+        OBJECTS.append(domino)
+        domino.in_screen = True
+        domino.update()
+
+
 def main():
+    global gameManager
     global table
     global TURN
 
@@ -613,6 +725,9 @@ def main():
     table.start_game()
     gameManager = GameManager()
     gameManager.new_game()
+
+    max_time = 0.5
+    minimax_solver = MinimaxSolver(max_time=max_time, ts=time.time())
 
     clock = pygame.time.Clock()
     TURN = 0  
@@ -630,7 +745,37 @@ def main():
             played = table.player_plays(TURN)
 
         else:
-            played = table.computer_plays(TURN)
+            state = Fake_Table(state=table.table_dominoes)
+            child = minimax_solver.solve(state, TURN)
+            
+            if child is not None:
+                domino = np.array([domino for domino in child.fake_table if domino not in state.fake_table])
+                idx = np.where(child.fake_table == domino)[0]
+                
+                #print("\n\n",child,"\n",domino)
+                #print(f"\n{PLAYERS[TURN]}\nDomino jugado: {domino}, {idx}\nEstado inicial: {state}\nHijo: {child}\n")
+                
+                domino_idx = int(np.where(PLAYERS[TURN].dominoes == domino)[0])
+                domino_to_play = PLAYERS[TURN].dominoes[domino_idx]
+
+                if idx <= 0:
+                    table.add_domino_to_table(domino_to_play, "left")
+
+                if idx >= 1:
+                    table.add_domino_to_table(domino_to_play, "right")
+
+                PLAYERS[TURN].dominoes = np.delete(PLAYERS[TURN].dominoes, np.where(PLAYERS[TURN].dominoes == domino))
+                add_layers(domino_to_play)
+                played = True
+            
+            elif child is None and len(table.dominoes) != 0:
+                PLAYERS[TURN].add_domino(table.draw_random())
+                continue
+
+            elif child is None and len(table.dominoes) == 0:
+                played = True
+
+            print(PLAYERS[TURN])
 
         if played == -1:
             break
