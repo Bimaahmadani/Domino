@@ -35,6 +35,8 @@ LAYERS = {0: Layer()}
 
 PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
 PLAYERS[1].change_auto()
+#PLAYERS[2].change_auto()
+#PLAYERS[3].change_auto()
 FPS = 60
 
 
@@ -374,7 +376,7 @@ class Table:
         played = False
 
         while played != True:
-            if len(self.dominoes) == 0:
+            if len(self.dominoes) == 0 and self.extra_dominoes is not None:
                 self.hide_extra_dominoes()
 
             for event in pygame.event.get():
@@ -393,9 +395,10 @@ class Table:
                             else:
                                 print("!!")
 
-                    if self.extra_dominoes.click_me():
-                        PLAYERS[player_idx].add_domino(self.draw_random())
-                        self.draw_player_dominoes(player_idx)
+                    if self.extra_dominoes is not None:
+                        if self.extra_dominoes.click_me():
+                            PLAYERS[player_idx].add_domino(self.draw_random())
+                            self.draw_player_dominoes(player_idx)
 
                     if PASS.click_me():
                         played = True
@@ -534,6 +537,7 @@ class GameManager():
         self.In_Game = False
 
         self.possibility_of_lock_the_game = False
+        self.winner = None
 
     def check_game_status(self, last_turn):
         players_without_dominos = 0
@@ -555,12 +559,12 @@ class GameManager():
 
             if players_without_dominos >= PLAYERS_NUM:
                 result = self.game_locked(last_turn)
-                return result
+                return result * np.inf
 
         if terminal_val == PLAYERS[last_turn]:
-            return 1
+            return 1 * np.inf
         elif terminal_val is not None:
-            return -1
+            return -1 * np.inf
         else:
             return terminal_val
 
@@ -619,7 +623,7 @@ class GameManager():
         self.In_Game = False
 
     def win(self, winner):
-        print(f"Player #{winner.num + 1} wins the game")
+        self.winner = winner
         self.You_Win = True
 
         self.Game_Over = False
@@ -633,19 +637,22 @@ class GameManager():
 
 
 class MinimaxSolver():
-    def __init__(self, max_depth=3, ts=None, max_time=None, timeit=False):
+    def __init__(self, max_depth=6, ts=None, max_time=None, timeit=False):
         self.max_depth = max_depth
-        self.ts = ts
         self.max_time = max_time
         self.timeit = timeit
+        self.ts = ts
 
     def solve(self, state, computer_idx):
         max_child, _ = self.__maximize(state, -np.inf, np.inf, computer_idx, 0)
         return max_child
 
     def __maximize(self, state, alpha, beta, computer_idx, depth):
-        terminal_val = gameManager.check_game_status(computer_idx)
+        if self.timeit:
+            if time.time() - self.ts >= self.max_time:
+                return (None, -np.inf)
 
+        terminal_val = gameManager.check_game_status(computer_idx)
         if terminal_val is not None:
             return (None, terminal_val)
         
@@ -666,8 +673,11 @@ class MinimaxSolver():
         return max_child, max_utility
     
     def __minimize(self, state, alpha, beta, computer_idx, depth):
-        terminal_val = gameManager.check_game_status(computer_idx)
+        if self.timeit:
+            if time.time() - self.ts >= self.max_time:
+                return (None, -np.inf)
 
+        terminal_val = gameManager.check_game_status(computer_idx)
         if terminal_val is not None:
             return (None, terminal_val)
         
@@ -726,10 +736,8 @@ def main():
     gameManager = GameManager()
     gameManager.new_game()
 
-    max_time = 0.5
-    minimax_solver = MinimaxSolver(max_time=max_time, ts=time.time())
-
     clock = pygame.time.Clock()
+    max_time = 0.5
     TURN = 0  
 
     while gameManager.In_Game:
@@ -746,14 +754,20 @@ def main():
 
         else:
             state = Fake_Table(state=table.table_dominoes)
-            child = minimax_solver.solve(state, TURN)
+            best_state = None
+
+            ts = time.time()
+            minimax_solver = MinimaxSolver(max_time=max_time, ts=ts)
+            for depth in range(1, 20):
+                minimax_solver.max_depth = depth
+                best_state = minimax_solver.solve(state, TURN)
+
+                if time.time() - ts >= max_time:
+                    break
             
-            if child is not None:
-                domino = np.array([domino for domino in child.fake_table if domino not in state.fake_table])
-                idx = np.where(child.fake_table == domino)[0]
-                
-                #print("\n\n",child,"\n",domino)
-                #print(f"\n{PLAYERS[TURN]}\nDomino jugado: {domino}, {idx}\nEstado inicial: {state}\nHijo: {child}\n")
+            if best_state is not None:
+                domino = np.array([domino for domino in best_state.fake_table if domino not in state.fake_table])
+                idx = np.where(best_state.fake_table == domino)[0]
                 
                 domino_idx = int(np.where(PLAYERS[TURN].dominoes == domino)[0])
                 domino_to_play = PLAYERS[TURN].dominoes[domino_idx]
@@ -771,18 +785,17 @@ def main():
                 add_layers(domino_to_play)
                 played = True
             
-            elif child is None and len(table.dominoes) != 0:
+            elif best_state is None and len(table.dominoes) != 0:
                 PLAYERS[TURN].add_domino(table.draw_random())
                 continue
 
-            elif child is None and len(table.dominoes) == 0:
+            elif best_state is None and len(table.dominoes) == 0:
                 played = True
-
-            print(PLAYERS[TURN])
 
         if played == -1:
             break
 
+        update_layers()
         gameManager.check_game_status(TURN)
 
         if played:
@@ -797,6 +810,7 @@ def main():
             gameManager.possibility_of_lock_the_game = True
 
         if gameManager.You_Win:
+            print(f"Player #{gameManager.winner.num + 1} wins the game")
             time.sleep(SLEEP_TIME*2)
             pass
 
