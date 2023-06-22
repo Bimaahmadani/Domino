@@ -390,6 +390,7 @@ class Table:
                             if self.can_be_put(domino):
                                 self.add_domino_to_table(domino)
                                 PLAYERS[player_idx].dominoes = np.delete(PLAYERS[player_idx].dominoes, np.where(PLAYERS[player_idx].dominoes == domino))
+                                self.draw_player_dominoes(player_idx)
                                 played = True
 
                             else:
@@ -701,7 +702,11 @@ class MinimaxSolver():
 def update_layers():
     WINDOW.blit(BACKGROUND, (0, 0))
     WINDOW.blit(PLAYER__, PLAYER__pos)
-    WINDOW.blit(player_to_play, PLAYER_NUM_pos)
+    try:
+        WINDOW.blit(player_to_play, PLAYER_NUM_pos)
+    except:
+        pass
+
     table.players_dominoes()
 
     for object in OBJECTS:
@@ -811,11 +816,11 @@ def main():
 
         if gameManager.You_Win:
             print(f"Player #{gameManager.winner.num + 1} wins the game")
-            time.sleep(SLEEP_TIME*2)
+            time.sleep(SLEEP_TIME*6)
             pass
 
         if gameManager.Game_Over:
-            time.sleep(SLEEP_TIME*2)
+            time.sleep(SLEEP_TIME*6)
             pass
 
         update_layers()
