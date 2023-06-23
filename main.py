@@ -26,6 +26,8 @@ PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert
 SLEEP_TIME = .2
 PLAYER__pos = (26, 606)
 PLAYER_NUM_pos = (240, 599)
+can_play_pos = (310, 614)
+turn_pos = (625, 6)
 
 WINDOW.blit(BACKGROUND, (0, 0))
 WINDOW.blit(PLAYER__, PLAYER__pos)
@@ -34,13 +36,20 @@ OBJECTS = []
 LAYERS = {0: Layer()}
 
 PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
+
+#Player
+player = PLAYERS[0]
+
+#computer
+#PLAYERS[0].change_auto()
 PLAYERS[1].change_auto()
 #PLAYERS[2].change_auto()
 #PLAYERS[3].change_auto()
+
 FPS = 60
 
 
-class Table:
+class Table():
     def __init__(self):
         self.spacing = 95
         self.first_game = True
@@ -370,14 +379,29 @@ class Table:
             if button not in OBJECTS:
                 OBJECTS.append(button)
 
+    def draw_player_interface(self, player):
+        self.draw_player_dominoes(player.num)
+        self.draw_player_number(player.num)
+        update_layers()
+
     def player_plays(self, player_idx):
         self.erase_player_dominoes(player_idx)
         self.draw_player_dominoes(player_idx)
+        
+        global can_play
+        can_play = None
         played = False
 
         while played != True:
             if len(self.dominoes) == 0 and self.extra_dominoes is not None:
                 self.hide_extra_dominoes()
+
+            aux = gameManager.check_player_dominoes(PLAYERS[TURN])
+            if aux:
+                can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
+
+            else:
+                can_play = pygame.image.load(f"assets/Dominos (Interface)/no vas.png").convert_alpha()
 
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -417,6 +441,7 @@ class Table:
 
             update_layers()
 
+        can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
         time.sleep(SLEEP_TIME)
         return played
 
@@ -439,6 +464,7 @@ class Table:
         self.create_buttons()
         
         if self.first_game:
+            self.draw_player_interface(player)
             self.create_right_positions()
             self.create_left_positions()
             self.first_game = False
@@ -701,9 +727,13 @@ class MinimaxSolver():
 
 def update_layers():
     WINDOW.blit(BACKGROUND, (0, 0))
+    
+    WINDOW.blit(player_to_play, PLAYER_NUM_pos)
     WINDOW.blit(PLAYER__, PLAYER__pos)
+
     try:
-        WINDOW.blit(player_to_play, PLAYER_NUM_pos)
+        WINDOW.blit(can_play, can_play_pos)
+        WINDOW.blit(turn, turn_pos)
     except:
         pass
 
@@ -735,6 +765,7 @@ def main():
     global gameManager
     global table
     global TURN
+    global turn
 
     table = Table()
     table.start_game()
@@ -743,6 +774,7 @@ def main():
 
     clock = pygame.time.Clock()
     max_time = 0.5
+    turn = None
     TURN = 0  
 
     while gameManager.In_Game:
@@ -754,8 +786,10 @@ def main():
                 sys.exit()
 
         if PLAYERS[TURN].manual:
+            turn = pygame.image.load(f"assets/Dominos (Interface)/Tu Turno.png").convert_alpha()
             table.draw_player_number(TURN)
             played = table.player_plays(TURN)
+            turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
 
         else:
             state = Fake_Table(state=table.table_dominoes)
