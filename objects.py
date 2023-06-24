@@ -234,9 +234,10 @@ class Button(GameObject):
 
 class Player:
     def __init__(self, num, manual=True):
-        self.num = num
         self.dominoes = np.array([])
         self.manual = manual
+        self.points = 0
+        self.num = num
 
     def add_domino(self, domino):
         self.dominoes = np.append(self.dominoes, domino)
@@ -251,6 +252,12 @@ class Player:
             sum_of_dominoes += domino.sum_vals()
 
         return sum_of_dominoes
+
+    def add_points(self, points):
+        self.points += points 
+
+    def clear_points(self):
+        self.points = 0
 
     def change_manual(self):
         self.manual = True

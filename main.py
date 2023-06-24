@@ -42,7 +42,7 @@ player = PLAYERS[0]
 
 #computer
 #PLAYERS[0].change_auto()
-PLAYERS[1].change_auto()
+#PLAYERS[1].change_auto()
 #PLAYERS[2].change_auto()
 #PLAYERS[3].change_auto()
 
@@ -51,6 +51,7 @@ FPS = 60
 
 class Table():
     def __init__(self):
+        self.turn = 0
         self.spacing = 95
         self.first_game = True
         self.dominoes = np.array([], dtype=object)
@@ -321,20 +322,30 @@ class Table():
     def players_dominoes(self):
         x, y = 1309, 30
         num_x, num_y = 1260, 12
-        for player in range(0, PLAYERS_NUM):
-            dominoes_amount = len(PLAYERS[player].dominoes)
+        turn_x, turn_y = 1180, 25
+
+        for player in PLAYERS:
+            dominoes_amount = len(player.dominoes)
 
             if dominoes_amount >= 7:
                 dominoes_amount = 7
 
             num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{dominoes_amount}.png").convert_alpha()
-            player_num = pygame.image.load(f"assets/Dominos (Interface)/{player + 1}p.png").convert_alpha()
+            player_num = pygame.image.load(f"assets/Dominos (Interface)/{player.num + 1}p.png").convert_alpha()
 
+            if self.turn == player.num:
+                player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
+
+            else:
+                player_turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
+
+            WINDOW.blit(player_turn, (turn_x, turn_y))
             WINDOW.blit(num_dominoes, (x, y))
             WINDOW.blit(player_num, (num_x, num_y))
 
             y += 65
             num_y += 64
+            turn_y += 64
 
     def activate_arrows(self):
         if self.left_arrow_orientation:
@@ -563,6 +574,9 @@ class GameManager():
         self.You_Win = False
         self.In_Game = False
 
+        self.count_points = True
+        self.teams = False
+
         self.possibility_of_lock_the_game = False
         self.winner = None
 
@@ -661,6 +675,7 @@ class GameManager():
 
         self.Game_Over = False
         self.You_Win = False
+        self.winner = None
 
 
 class MinimaxSolver():
@@ -753,7 +768,7 @@ def update_layers():
     pygame.display.update() 
 
 
-def add_layers(domino):
+def add_domino_to_layers(domino):
     if domino not in OBJECTS:
         domino.change_orientation_sprite()
         OBJECTS.append(domino)
@@ -764,8 +779,8 @@ def add_layers(domino):
 def main():
     global gameManager
     global table
-    global TURN
     global turn
+    global TURN
 
     table = Table()
     table.start_game()
@@ -773,11 +788,12 @@ def main():
     gameManager.new_game()
 
     clock = pygame.time.Clock()
-    max_time = 0.5
+    max_time = 0.6
     turn = None
-    TURN = 0  
+    TURN = 0
 
     while gameManager.In_Game:
+        table.turn = TURN
         clock.tick(FPS)
 
         for event in pygame.event.get():
@@ -821,7 +837,7 @@ def main():
                     table.add_domino_to_table(domino_to_play, "right")
 
                 PLAYERS[TURN].dominoes = np.delete(PLAYERS[TURN].dominoes, np.where(PLAYERS[TURN].dominoes == domino))
-                add_layers(domino_to_play)
+                add_domino_to_layers(domino_to_play)
                 played = True
             
             elif best_state is None and len(table.dominoes) != 0:
