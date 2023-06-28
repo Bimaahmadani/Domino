@@ -235,6 +235,7 @@ class Button(GameObject):
 class Player:
     def __init__(self, num, manual=True):
         self.dominoes = np.array([])
+        self.first_pick = True
         self.manual = manual
         self.points = 0
         self.num = num

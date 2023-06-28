@@ -428,6 +428,11 @@ class Table():
 
             else:
                 can_play = pygame.image.load(f"assets/Dominos (Interface)/no vas.png").convert_alpha()
+                if len(self.table_dominoes) < PLAYERS_NUM and len(self.dominoes) == 0:
+                    print("Son 30!!")
+                                
+                    try: PLAYERS[player_idx - 1].add_points(30)
+                    except: PLAYERS[-1].add_points(30)
 
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -450,6 +455,15 @@ class Table():
                         if self.extra_dominoes.click_me():
                             PLAYERS[player_idx].add_domino(self.draw_random())
                             self.draw_player_dominoes(player_idx)
+
+                            if len(self.table_dominoes) < PLAYERS_NUM and PLAYERS[player_idx].first_pick:
+                                print("Son 30!!")
+                                
+                                try: PLAYERS[player_idx - 1].add_points(30)
+                                except: PLAYERS[-1].add_points(30)
+
+                                PLAYERS[player_idx].first_pick = False
+
                             self.extra_domino = True
 
                     if PASS.click_me():
@@ -575,11 +589,35 @@ class Fake_Table():
         return fake_table
     
     def heuristic(self, computer_idx):
+        computer = PLAYERS[computer_idx]
         heuristic = 0
 
         playable_dominoes = self.check_computer_dominoes(computer_idx)
         if len(playable_dominoes) >= 1:
             heuristic += 1
+
+        if len(playable_dominoes) == 0:
+            heuristic -= 1
+
+        for player in PLAYERS:
+            if player != computer:
+                if len(player.dominoes) >= len(computer.dominoes):
+                    heuristic += 1
+                else:
+                    heuristic -= 1
+
+        for player in PLAYERS:
+            if player != computer:
+                if player.points <= computer.points:
+                    heuristic += 1
+                else:
+                    heuristic -= 1
+
+        for domino in computer.dominoes:
+            if domino.acotao:
+                heuristic -= 1
+            else:
+                heuristic += 1
 
         return heuristic
 
@@ -600,6 +638,7 @@ class GameManager():
         self.teams = False
 
         self.possibility_of_lock_the_game = False
+        self.locked = False
         self.winner = None
 
     def check_game_status(self, last_turn):
@@ -620,7 +659,7 @@ class GameManager():
                 else:
                     players_without_dominos += 1
 
-            if players_without_dominos >= PLAYERS_NUM:
+            if players_without_dominos >= PLAYERS_NUM and self.check_table_dominoes():
                 result = self.game_locked(last_turn)
                 return result * np.inf
 
@@ -632,6 +671,7 @@ class GameManager():
             return terminal_val
 
     def game_locked(self, last_turn):
+        self.locked = True
         player1 = PLAYERS[last_turn].count_tiles()
         try:
             player2 = PLAYERS[last_turn + 1].count_tiles()
@@ -665,14 +705,24 @@ class GameManager():
                 self.win(PLAYERS[0])
                 return -1  
 
+    def check_table_dominoes(self):
+        left = table.table_dominoes[0].vals[0]
+        right = table.table_dominoes[-1].vals[-1]
+        for domino in table.dominoes:
+            if left in domino.vals:
+                return False
+            if right in domino.vals:
+                return False
+        
+        return True
+
     def check_player_dominoes(self, player):
         if len(table.table_dominoes) == 0:
             return True
 
+        left = table.table_dominoes[0].vals[0]
+        right = table.table_dominoes[-1].vals[-1]
         for domino in player.dominoes:
-            left = table.table_dominoes[0].vals[0]
-            right = table.table_dominoes[-1].vals[-1]
-
             if left in domino.vals:
                 return True
             if right in domino.vals:
@@ -690,14 +740,10 @@ class GameManager():
             self.You_Win = True
             self.In_Game = False
 
-            if len(self.winner.dominoes) != 0:
-                self.winner.add_points(self.winner.count_tiles())
-
             for player in PLAYERS:
-                if player != self.winner:
-                    self.winner.add_points(player.count_tiles())
+                self.winner.add_points(player.count_tiles())
 
-            if table.capicua():
+            if table.capicua() and self.locked != True:
                 print("\nCAPICUAAAA!!!!!, SON 30!!!!")
                 self.winner.add_points(30)
 
@@ -878,9 +924,26 @@ def main():
             elif best_state is None and len(table.dominoes) != 0:
                 PLAYERS[TURN].add_domino(table.draw_random())
                 table.extra_domino = True
+
+                if len(table.table_dominoes) < PLAYERS_NUM and PLAYERS[TURN].first_pick:
+                    print("Son 30!!")
+
+                    try:
+                        PLAYERS[TURN - 1].add_points(30)
+                    except:
+                        PLAYERS[-1].add_points(30)
+
+                    PLAYERS[TURN].first_pick = False
+
                 continue
 
             elif best_state is None and len(table.dominoes) == 0:
+                if len(table.table_dominoes) < PLAYERS_NUM:
+                    print("Son 30!!")
+                                
+                    try: PLAYERS[TURN - 1].add_points(30)
+                    except: PLAYERS[-1].add_points(30)
+
                 played = True
 
             update_layers()
