@@ -42,7 +42,7 @@ player = PLAYERS[0]
 
 #computer
 #PLAYERS[0].change_auto()
-#PLAYERS[1].change_auto()
+PLAYERS[1].change_auto()
 #PLAYERS[2].change_auto()
 #PLAYERS[3].change_auto()
 
@@ -63,10 +63,14 @@ class Table():
         self.right_positions = []
 
         self.last_player = None
+        self.extra_domino = False
         self.extra_dominoes = None
+        self.left_arrow_orientation = True
         self.left_arrow = Button("arrow1.png")
         self.right_arrow = Button("arrow1.png")
-        self.left_arrow_orientation = True
+
+        self.extra_domino = False
+        self.extra_x, self.extra_y = 0, 0
 
     def dominoes_distribution(self):
         for i in range(7):
@@ -82,6 +86,10 @@ class Table():
         self.dominoes = np.delete(self.dominoes, np.where(self.dominoes == domino))
         return domino
     
+    def extra_domino_sprite(self):
+        extra_domino = pygame.image.load(f"assets/Dominos (Interface)/+.png").convert_alpha()
+        WINDOW.blit(extra_domino, (self.extra_x, self.extra_y))
+
     def draw_player_number(self, player_number):
         global player_to_play
         player_to_play = pygame.image.load(f"assets/Dominos (Interface)/{player_number + 1}p.png").convert_alpha()
@@ -89,30 +97,31 @@ class Table():
         update_layers()
 
     def draw_player_dominoes(self, player_idx):
-        x_padding = 68
-        y_padding = 160
+        if PLAYERS[player_idx].manual:
+            x_padding = 68
+            y_padding = 160
 
-        x, y = 64, 717
-        aux = 1
+            x, y = 64, 717
+            aux = 1
 
-        for domino in PLAYERS[player_idx].dominoes:
-            if domino not in OBJECTS:
-                OBJECTS.append(domino)
+            for domino in PLAYERS[player_idx].dominoes:
+                if domino not in OBJECTS:
+                    OBJECTS.append(domino)
 
-            domino.add_position(x, y)
-            domino.show()
+                domino.add_position(x, y)
+                domino.show()
 
-            if aux == 7:
-                x, y = 64, 717
-                y -= y_padding
-                aux = 0
+                if aux == 7:
+                    x, y = 64, 717
+                    y -= y_padding
+                    aux = 0
 
-                y_padding += 100
-            
-            else:
-                x += x_padding
+                    y_padding += 100
+                
+                else:
+                    x += x_padding
 
-            aux += 1 
+                aux += 1 
 
     def erase_player_dominoes(self, player_idx):
         players = [index for index, player in enumerate(PLAYERS) if index != player_idx]
@@ -323,6 +332,7 @@ class Table():
         x, y = 1309, 30
         num_x, num_y = 1260, 12
         turn_x, turn_y = 1180, 25
+        sprite_added = True
 
         for player in PLAYERS:
             dominoes_amount = len(player.dominoes)
@@ -335,6 +345,11 @@ class Table():
 
             if self.turn == player.num:
                 player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
+                self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
+                
+                if self.extra_domino and sprite_added:
+                    self.extra_domino_sprite()
+                    sprite_added = False
 
             else:
                 player_turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
@@ -435,6 +450,7 @@ class Table():
                         if self.extra_dominoes.click_me():
                             PLAYERS[player_idx].add_domino(self.draw_random())
                             self.draw_player_dominoes(player_idx)
+                            self.extra_domino = True
 
                     if PASS.click_me():
                         played = True
@@ -455,6 +471,12 @@ class Table():
         can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
         time.sleep(SLEEP_TIME)
         return played
+
+    def capicua(self):
+        if self.table_dominoes[0].vals[0] == self.table_dominoes[-1].vals[-1]:
+            return True
+        else:
+            return False
 
     def repeat_game(self):
         OBJECTS = []
@@ -570,9 +592,9 @@ class Fake_Table():
 
 class GameManager():
     def __init__(self):
-        self.Game_Over = False
         self.You_Win = False
         self.In_Game = False
+        self.real = False
 
         self.count_points = True
         self.teams = False
@@ -616,6 +638,11 @@ class GameManager():
         except:
             player2 = PLAYERS[0].count_tiles()
 
+        try:
+            print(f"\nJuego trancado, conteo:\nJugador #{PLAYERS[last_turn].num + 1}: {player1}\nJugador #{PLAYERS[last_turn + 1].num + 1}: {player2}")
+        except:
+            print(f"\nJuego trancado, conteo:\nJugador #{PLAYERS[last_turn].num + 1}: {player1}\nJugador #{PLAYERS[0].num + 1}: {player2}")
+
         if player1 < player2:
             self.win(PLAYERS[last_turn])
             return 1
@@ -656,26 +683,34 @@ class GameManager():
     def check_for_winner(self, player):
         if len(player.dominoes) == 0:
             return True
-        
-    def lose(self):
-        self.Game_Over = True
-
-        self.You_Win = False
-        self.In_Game = False
 
     def win(self, winner):
-        self.winner = winner
-        self.You_Win = True
+        if self.real:
+            self.winner = winner
+            self.You_Win = True
+            self.In_Game = False
 
-        self.Game_Over = False
-        self.In_Game = False
+            if len(self.winner.dominoes) != 0:
+                self.winner.add_points(self.winner.count_tiles())
+
+            for player in PLAYERS:
+                if player != self.winner:
+                    self.winner.add_points(player.count_tiles())
+
+            if table.capicua():
+                print("\nCAPICUAAAA!!!!!, SON 30!!!!")
+                self.winner.add_points(30)
 
     def new_game(self):
         self.In_Game = True
-
-        self.Game_Over = False
         self.You_Win = False
         self.winner = None
+
+    def clear_scores(self):
+        self.new_game()
+
+        for player in PLAYERS:
+            player.clear_points()
 
 
 class MinimaxSolver():
@@ -842,18 +877,23 @@ def main():
             
             elif best_state is None and len(table.dominoes) != 0:
                 PLAYERS[TURN].add_domino(table.draw_random())
+                table.extra_domino = True
                 continue
 
             elif best_state is None and len(table.dominoes) == 0:
                 played = True
 
+            update_layers()
+
         if played == -1:
             break
 
-        update_layers()
+        gameManager.real = True
         gameManager.check_game_status(TURN)
+        gameManager.real = False
 
         if played:
+            table.extra_domino = False
             played = False
             TURN += 1
 
@@ -865,11 +905,12 @@ def main():
             gameManager.possibility_of_lock_the_game = True
 
         if gameManager.You_Win:
-            print(f"Player #{gameManager.winner.num + 1} wins the game")
-            time.sleep(SLEEP_TIME*6)
-            pass
+            print(f"\nJugador #{gameManager.winner.num + 1} ganó la partida")
 
-        if gameManager.Game_Over:
+            print("\nDominos de jugadores:")
+            for player in PLAYERS:
+                print(f"Jugador #{player.num + 1} en total {player.count_tiles()}, {player.dominoes}")
+
             time.sleep(SLEEP_TIME*6)
             pass
 
@@ -881,3 +922,10 @@ def main():
 if __name__ == '__main__':
     while True:
         OBJECTS, LAYERS = main()
+
+        print("\nPuntos")
+        for player in PLAYERS:
+            print(f"Jugador #{player.num + 1}: {player.points}")
+
+        print("\n////////////////////////////////////////////////////////")
+        time.sleep(SLEEP_TIME*6)
