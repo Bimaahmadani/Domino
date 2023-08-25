@@ -17,8 +17,7 @@ ICON = pygame.image.load("assets/Domino (icon).png").convert_alpha()
 pygame.display.set_icon(ICON)
 
 PLAYERS_NUM = 2
-if PLAYERS_NUM < 2: PLAYERS_NUM = 2
-elif PLAYERS_NUM > 4: PLAYERS_NUM = 4
+last_players_num = PLAYERS_NUM
 
 BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
 PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert_alpha()
@@ -46,7 +45,7 @@ PLAYERS[1].change_auto()
 #PLAYERS[2].change_auto()
 #PLAYERS[3].change_auto()
 
-FPS = 60
+FPS = 30
 
 
 class Table():
@@ -268,13 +267,6 @@ class Table():
                         choose = False
                         break
 
-                    if FULLSCREEN.click_me():
-                        pass
-
-                    if EXIT.click_me():
-                        pygame.quit()
-                        sys.exit()
-
             update_layers()
 
         self.add_domino_to_table(domino)
@@ -414,7 +406,9 @@ class Table():
         self.erase_player_dominoes(player_idx)
         self.draw_player_dominoes(player_idx)
         
+        global PLAYERS_NUM
         global can_play
+
         can_play = None
         played = False
 
@@ -470,15 +464,19 @@ class Table():
                         played = True
 
                     if REPEAT.click_me():
+                        PLAYERS_NUM = 2
                         played = -1
                         return played
 
                     if FULLSCREEN.click_me():
-                        pass
+                        PLAYERS_NUM = 3
+                        played = -1
+                        return played
 
                     if EXIT.click_me():
-                        pygame.quit()
-                        sys.exit()
+                        PLAYERS_NUM = 4
+                        played = -1
+                        return played
 
             update_layers()
 
@@ -822,6 +820,7 @@ class MinimaxSolver():
 
 
 def update_layers():
+    BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
     WINDOW.blit(BACKGROUND, (0, 0))
     
     WINDOW.blit(player_to_play, PLAYER_NUM_pos)
@@ -992,3 +991,22 @@ if __name__ == '__main__':
 
         print("\n////////////////////////////////////////////////////////")
         time.sleep(SLEEP_TIME*6)
+
+        if last_players_num != PLAYERS_NUM:
+            PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
+            last_players_num = PLAYERS_NUM
+            
+            if PLAYERS_NUM == 2:
+                player = PLAYERS[0]
+                PLAYERS[1].change_auto()
+            
+            if PLAYERS_NUM == 3:
+                player = PLAYERS[0]
+                PLAYERS[1].change_auto()
+                PLAYERS[2].change_auto()
+            
+            if PLAYERS_NUM == 4:
+                player = PLAYERS[0]
+                PLAYERS[1].change_auto()
+                PLAYERS[2].change_auto()
+                PLAYERS[3].change_auto()
