@@ -2,9 +2,11 @@ from objects import Domino, Player, Button
 from pygame.sprite import Group as Layer
 from pygame.locals import *
 import numpy as np
+import asyncio
 import pygame
 import time
 import sys
+
 
 #Window configuration
 pygame.init()
@@ -48,6 +50,15 @@ PLAYERS[1].change_auto()
 FPS = 30
 
 
+text_color = (59, 32, 39)
+bck_color = (255, 194, 161)
+
+X = WIDTH
+Y = HEIGHT
+
+font = pygame.font.Font('assets/alagard.ttf', 32)
+
+
 class Table():
     def __init__(self):
         self.turn = 0
@@ -70,6 +81,8 @@ class Table():
 
         self.extra_domino = False
         self.extra_x, self.extra_y = 0, 0
+
+        self.capicua_bool = False
 
     def dominoes_distribution(self):
         for i in range(7):
@@ -321,9 +334,9 @@ class Table():
         self.right_iterator += 1
 
     def players_dominoes(self):
-        x, y = 1309, 30
-        num_x, num_y = 1260, 12
-        turn_x, turn_y = 1180, 25
+        x, y = 1290, 30
+        num_x, num_y = 1240, 12
+        turn_x, turn_y = 1160, 25
         sprite_added = True
 
         for player in PLAYERS:
@@ -486,8 +499,10 @@ class Table():
 
     def capicua(self):
         if self.table_dominoes[0].vals[0] == self.table_dominoes[-1].vals[-1]:
+            self.capicua_bool = True
             return True
         else:
+            self.capicua_bool = False
             return False
 
     def repeat_game(self):
@@ -505,6 +520,7 @@ class Table():
         return OBJECTS, LAYERS
 
     def start_game(self):
+        self.capicua_bool = False
         self.dominoes_distribution()
         self.create_buttons()
         
@@ -742,7 +758,6 @@ class GameManager():
                 self.winner.add_points(player.count_tiles())
 
             if table.capicua() and self.locked != True:
-                print("\nCAPICUAAAA!!!!!, SON 30!!!!")
                 self.winner.add_points(30)
 
     def new_game(self):
@@ -856,7 +871,7 @@ def add_domino_to_layers(domino):
         domino.update()
 
 
-def main():
+def run():
     global gameManager
     global table
     global turn
@@ -925,8 +940,6 @@ def main():
                 table.extra_domino = True
 
                 if len(table.table_dominoes) < PLAYERS_NUM and PLAYERS[TURN].first_pick:
-                    print("Son 30!!")
-
                     try:
                         PLAYERS[TURN - 1].add_points(30)
                     except:
@@ -965,32 +978,78 @@ def main():
 
         if len(table.dominoes) == 0:
             gameManager.possibility_of_lock_the_game = True
-
-        if gameManager.You_Win:
-            print(f"\nJugador #{gameManager.winner.num + 1} ganó la partida")
-
-            print("\nDominos de jugadores:")
-            for player in PLAYERS:
-                print(f"Jugador #{player.num + 1} en total {player.count_tiles()}, {player.dominoes}")
-
-            time.sleep(SLEEP_TIME*6)
-            pass
-
+        
         update_layers()
+
+    if gameManager.You_Win:
+        text = font.render(f"Jugador #{gameManager.winner.num + 1} gano la partida", True, text_color, bck_color)
+        
+        textRect = text.get_rect()
+        textRect.center = (WIDTH // 2, 66)
+
+        WINDOW.blit(text, textRect)
+
+        y_padding = 120
+        for player in PLAYERS:
+            points = font.render(f"Dominos del jugador #{player.num + 1} en total {player.count_tiles()}", True, text_color, bck_color)
+        
+            textRect2 = points.get_rect()
+            textRect2.center = (WIDTH // 2, y_padding)
+            y_padding += 30
+
+            WINDOW.blit(points, textRect2)
+
+        y_padding += 30
+        if table.capicua_bool and gameManager.locked == False:
+            capicua = font.render(f"Jugador #{gameManager.winner.num + 1} hizo capicua! (+30 puntos)", True, text_color, bck_color)
+        
+            textRect3 = capicua.get_rect()
+            textRect3.center = (WIDTH // 2, y_padding)
+
+            WINDOW.blit(capicua, textRect3)
+        
+        elif table.capicua_bool == False and gameManager.locked:
+            trancao = font.render(f"Jugador #{gameManager.winner.num + 1} ha trancado el juego!", True, text_color, bck_color)
+        
+            textRect3 = trancao.get_rect()
+            textRect3.center = (WIDTH // 2, y_padding)
+
+            WINDOW.blit(trancao, textRect3)
+
+        pygame.display.update()
+        time.sleep(SLEEP_TIME*24)
 
     OBJECTS, LAYERS = table.repeat_game()
     return OBJECTS, LAYERS
 
-if __name__ == '__main__':
+
+async def main():
+    global OBJECTS, LAYERS, PLAYERS_NUM, WINDOW, SLEEP_TIME, PLAYERS, last_players_num
+
     while True:
-        OBJECTS, LAYERS = main()
+        OBJECTS, LAYERS = run()
+        update_layers()
 
-        print("\nPuntos")
-        for player in PLAYERS:
-            print(f"Jugador #{player.num + 1}: {player.points}")
+        if last_players_num == PLAYERS_NUM:
+            text = font.render('Puntos', True, text_color, bck_color)
+            
+            textRect = text.get_rect()
+            textRect.center = (WIDTH // 2, 66)
 
-        print("\n////////////////////////////////////////////////////////")
-        time.sleep(SLEEP_TIME*6)
+            WINDOW.blit(text, textRect)
+            y_padding = 100
+
+            for player in PLAYERS:
+                points = font.render(f"Jugador #{player.num + 1}: {player.points}", True, text_color, bck_color)
+            
+                textRect2 = points.get_rect()
+                textRect2.center = (WIDTH // 2, y_padding)
+                y_padding += 30
+
+                WINDOW.blit(points, textRect2)
+
+            pygame.display.update()
+            time.sleep(SLEEP_TIME*24)
 
         if last_players_num != PLAYERS_NUM:
             PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
@@ -1010,3 +1069,8 @@ if __name__ == '__main__':
                 PLAYERS[1].change_auto()
                 PLAYERS[2].change_auto()
                 PLAYERS[3].change_auto()
+        
+        await asyncio.sleep(0)
+
+
+asyncio.run(main())
