@@ -1023,8 +1023,36 @@ def run():
     return OBJECTS, LAYERS
 
 
+def intro():
+    skip = False
+    for i in range(2, 10):
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == KEYDOWN and event.key == K_ESCAPE:
+                skip = True
+                break
+
+        if skip:
+            break
+
+        intro = pygame.image.load(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.png").convert_alpha()
+            
+        WINDOW.blit(intro, (0, 0))
+        pygame.display.flip()
+        pygame.display.update()
+            
+        time.sleep(SLEEP_TIME*2.6)
+
+    if skip != True:
+        time.sleep(SLEEP_TIME*3.6)
+
+
 async def main():
     global OBJECTS, LAYERS, PLAYERS_NUM, WINDOW, SLEEP_TIME, PLAYERS, last_players_num
+    intro()
 
     while True:
         OBJECTS, LAYERS = run()
