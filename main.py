@@ -1,4 +1,5 @@
-from objects import Domino, Player, Button
+# pyinstaller main.py --onefile --noconsole --add-data "assets;assets" --add-data "venv;venv"
+from assets.objects import Domino, Player, Button
 from pygame.sprite import Group as Layer
 from pygame.locals import *
 import numpy as np
@@ -884,6 +885,7 @@ def domino_sound():
 
 def run():
     global gameManager
+    global can_play
     global player
     global table
     global turn
@@ -899,6 +901,7 @@ def run():
     turn = None
     TURN = 0
 
+    can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
     for turnNum in range(PLAYERS_NUM):
         try:
             if PLAYERS[turnNum].manual:
