@@ -3,6 +3,7 @@ from pygame.sprite import Group as Layer
 from pygame.locals import *
 import numpy as np
 import asyncio
+import random
 import pygame
 import time
 import sys
@@ -24,7 +25,7 @@ last_players_num = PLAYERS_NUM
 BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
 PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert_alpha()
 
-SLEEP_TIME = .2
+SLEEP_TIME = .16
 PLAYER__pos = (26, 606)
 PLAYER_NUM_pos = (240, 599)
 can_play_pos = (310, 614)
@@ -57,6 +58,10 @@ X = WIDTH
 Y = HEIGHT
 
 font = pygame.font.Font('assets/alagard.ttf', 32)
+
+GAME_FINISHED_SOUND =  pygame.mixer.Sound('assets/Audio/gameFinished.wav')
+EXTRA_DOMINO_SOUND =  pygame.mixer.Sound('assets/Audio/newDomino.wav')
+BUTTOM_SOUND =  pygame.mixer.Sound('assets/Audio/Buttom.wav')
 
 
 class Table():
@@ -254,6 +259,7 @@ class Table():
                 self.right_placement(domino)
 
             domino.domino_placed()
+            domino_sound()
         
         else:
             self.choose_side(domino)
@@ -271,11 +277,13 @@ class Table():
 
                 if event.type == MOUSEBUTTONDOWN:
                     if self.right_arrow.click_me():
+                        #BUTTOM_SOUND.play()
                         self.side = "right"
                         choose = False
                         break
 
                     if self.left_arrow.click_me():
+                        #BUTTOM_SOUND.play()
                         self.side = "left"
                         choose = False
                         break
@@ -436,10 +444,9 @@ class Table():
             else:
                 can_play = pygame.image.load(f"assets/Dominos (Interface)/no vas.png").convert_alpha()
                 if len(self.table_dominoes) < PLAYERS_NUM and len(self.dominoes) == 0:
-                    print("Son 30!!")
-                                
-                    try: PLAYERS[player_idx - 1].add_points(30)
-                    except: PLAYERS[-1].add_points(30)
+                    if PLAYERS_NUM == 2:
+                        try: PLAYERS[player_idx - 1].add_points(30)
+                        except: PLAYERS[-1].add_points(30)
 
             for event in pygame.event.get():
                 if event.type == QUIT:
@@ -455,11 +462,10 @@ class Table():
                                 self.draw_player_dominoes(player_idx)
                                 played = True
 
-                            else:
-                                print("!!")
-
                     if self.extra_dominoes is not None:
                         if self.extra_dominoes.click_me():
+                            EXTRA_DOMINO_SOUND.play()
+
                             PLAYERS[player_idx].add_domino(self.draw_random())
                             self.draw_player_dominoes(player_idx)
 
@@ -474,19 +480,23 @@ class Table():
                             self.extra_domino = True
 
                     if PASS.click_me():
+                        BUTTOM_SOUND.play()
                         played = True
 
                     if REPEAT.click_me():
+                        BUTTOM_SOUND.play()
                         PLAYERS_NUM = 2
                         played = -1
                         return played
 
                     if FULLSCREEN.click_me():
+                        BUTTOM_SOUND.play()
                         PLAYERS_NUM = 3
                         played = -1
                         return played
 
                     if EXIT.click_me():
+                        BUTTOM_SOUND.play()
                         PLAYERS_NUM = 4
                         played = -1
                         return played
@@ -523,9 +533,9 @@ class Table():
         self.capicua_bool = False
         self.dominoes_distribution()
         self.create_buttons()
-        
+
         if self.first_game:
-            self.draw_player_interface(player)
+            #self.draw_player_interface(player)
             self.create_right_positions()
             self.create_left_positions()
             self.first_game = False
@@ -692,11 +702,6 @@ class GameManager():
         except:
             player2 = PLAYERS[0].count_tiles()
 
-        try:
-            print(f"\nJuego trancado, conteo:\nJugador #{PLAYERS[last_turn].num + 1}: {player1}\nJugador #{PLAYERS[last_turn + 1].num + 1}: {player2}")
-        except:
-            print(f"\nJuego trancado, conteo:\nJugador #{PLAYERS[last_turn].num + 1}: {player1}\nJugador #{PLAYERS[0].num + 1}: {player2}")
-
         if player1 < player2:
             self.win(PLAYERS[last_turn])
             return 1
@@ -757,7 +762,7 @@ class GameManager():
             for player in PLAYERS:
                 self.winner.add_points(player.count_tiles())
 
-            if table.capicua() and self.locked != True:
+            if table.capicua() and self.locked != True and self.winner.count_tiles() == 0:
                 self.winner.add_points(30)
 
     def new_game(self):
@@ -871,8 +876,15 @@ def add_domino_to_layers(domino):
         domino.update()
 
 
+def domino_sound():
+    dominoNum = random.randint(0, 26)
+    DOMINO_SOUND =  pygame.mixer.Sound(f'assets/Audio/domino{dominoNum}.wav')
+    DOMINO_SOUND.play()
+
+
 def run():
     global gameManager
+    global player
     global table
     global turn
     global TURN
@@ -887,6 +899,15 @@ def run():
     turn = None
     TURN = 0
 
+    for turnNum in range(PLAYERS_NUM):
+        try:
+            if PLAYERS[turnNum].manual:
+                table.draw_player_dominoes(turnNum)
+                table.draw_player_number(turnNum)
+        
+        except:
+            pass
+
     while gameManager.In_Game:
         table.turn = TURN
         clock.tick(FPS)
@@ -898,7 +919,6 @@ def run():
 
         if PLAYERS[TURN].manual:
             turn = pygame.image.load(f"assets/Dominos (Interface)/Tu Turno.png").convert_alpha()
-            table.draw_player_number(TURN)
             played = table.player_plays(TURN)
             turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
 
@@ -937,6 +957,7 @@ def run():
             
             elif best_state is None and len(table.dominoes) != 0:
                 PLAYERS[TURN].add_domino(table.draw_random())
+                #EXTRA_DOMINO_SOUND.play()
                 table.extra_domino = True
 
                 if len(table.table_dominoes) < PLAYERS_NUM and PLAYERS[TURN].first_pick:
@@ -950,11 +971,10 @@ def run():
                 continue
 
             elif best_state is None and len(table.dominoes) == 0:
-                if len(table.table_dominoes) < PLAYERS_NUM:
-                    print("Son 30!!")
-                                
-                    try: PLAYERS[TURN - 1].add_points(30)
-                    except: PLAYERS[-1].add_points(30)
+                if PLAYERS_NUM == 2:
+                    if len(table.table_dominoes) < PLAYERS_NUM:
+                        try: PLAYERS[TURN - 1].add_points(30)
+                        except: PLAYERS[-1].add_points(30)
 
                 played = True
 
@@ -982,6 +1002,7 @@ def run():
         update_layers()
 
     if gameManager.You_Win:
+        GAME_FINISHED_SOUND.play()
         text = font.render(f"Jugador #{gameManager.winner.num + 1} gano la partida", True, text_color, bck_color)
         
         textRect = text.get_rect()
@@ -991,7 +1012,7 @@ def run():
 
         y_padding = 120
         for player in PLAYERS:
-            points = font.render(f"Dominos del jugador #{player.num + 1} en total {player.count_tiles()}", True, text_color, bck_color)
+            points = font.render(f"Dominos del jugador #{player.num + 1} en total: {player.count_tiles()}", True, text_color, bck_color)
         
             textRect2 = points.get_rect()
             textRect2.center = (WIDTH // 2, y_padding)
@@ -1000,15 +1021,15 @@ def run():
             WINDOW.blit(points, textRect2)
 
         y_padding += 30
-        if table.capicua_bool and gameManager.locked == False:
-            capicua = font.render(f"Jugador #{gameManager.winner.num + 1} hizo capicua! (+30 puntos)", True, text_color, bck_color)
+        if table.capicua() and gameManager.winner.count_tiles() == 0:
+            capicua = font.render(f"Jugador #{gameManager.winner.num + 1} hizo capicua! (Son +30)", True, text_color, bck_color)
         
             textRect3 = capicua.get_rect()
             textRect3.center = (WIDTH // 2, y_padding)
 
             WINDOW.blit(capicua, textRect3)
         
-        elif table.capicua_bool == False and gameManager.locked:
+        elif gameManager.locked and gameManager.winner.count_tiles() != 0:
             trancao = font.render(f"Jugador #{gameManager.winner.num + 1} ha trancado el juego!", True, text_color, bck_color)
         
             textRect3 = trancao.get_rect()
@@ -1044,7 +1065,7 @@ def intro():
         pygame.display.flip()
         pygame.display.update()
             
-        time.sleep(SLEEP_TIME*2.6)
+        time.sleep(SLEEP_TIME*1.6)
 
     if skip != True:
         time.sleep(SLEEP_TIME*3.6)
@@ -1082,21 +1103,62 @@ async def main():
         if last_players_num != PLAYERS_NUM:
             PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
             last_players_num = PLAYERS_NUM
-            
+
             if PLAYERS_NUM == 2:
-                player = PLAYERS[0]
-                PLAYERS[1].change_auto()
+                optionNum = random.randint(0, 1)
+
+                if optionNum == 0:
+                    player = PLAYERS[0]
+                    PLAYERS[1].change_auto()
+                
+                else:
+                    player = PLAYERS[1]
+                    PLAYERS[0].change_auto()
             
             if PLAYERS_NUM == 3:
-                player = PLAYERS[0]
-                PLAYERS[1].change_auto()
-                PLAYERS[2].change_auto()
+                optionNum = random.randint(0, 2)
+
+                if optionNum == 0:
+                    player = PLAYERS[0]
+                    PLAYERS[1].change_auto()
+                    PLAYERS[2].change_auto()
+                
+                elif optionNum == 1:
+                    player = PLAYERS[1]
+                    PLAYERS[0].change_auto()
+                    PLAYERS[2].change_auto()
+
+                else:
+                    player = PLAYERS[2]
+                    PLAYERS[1].change_auto()
+                    PLAYERS[0].change_auto()
             
             if PLAYERS_NUM == 4:
-                player = PLAYERS[0]
-                PLAYERS[1].change_auto()
-                PLAYERS[2].change_auto()
-                PLAYERS[3].change_auto()
+                optionNum = random.randint(0, 3)
+
+                if optionNum == 0:
+                    player = PLAYERS[0]
+                    PLAYERS[1].change_auto()
+                    PLAYERS[2].change_auto()
+                    PLAYERS[3].change_auto()
+                
+                elif optionNum == 1:
+                    player = PLAYERS[1]
+                    PLAYERS[0].change_auto()
+                    PLAYERS[2].change_auto()
+                    PLAYERS[3].change_auto()
+
+                elif optionNum == 2:
+                    player = PLAYERS[2]
+                    PLAYERS[1].change_auto()
+                    PLAYERS[0].change_auto()
+                    PLAYERS[3].change_auto()
+
+                else:
+                    player = PLAYERS[3]
+                    PLAYERS[1].change_auto()
+                    PLAYERS[2].change_auto()
+                    PLAYERS[0].change_auto()
         
         await asyncio.sleep(0)
 
