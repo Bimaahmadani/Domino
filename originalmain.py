@@ -9,186 +9,86 @@ import pygame
 import time
 import sys
 
-TableXSize = 15
-TableYSize = 8.7
 
-# create 3D cube
-vertices = (
-    (1, 1, 1),  # 0
-    (-1, 1, 1),  # 1
-    (-1, -1, 1),  # 2
-    (1, -1, 1),  # 3
-    (1, 1, -1),  # 4
-    (-1, 1, -1),  # 5
-    (-1, -1, -1),  # 6
-    (1, -1, -1),  # 7
-)
+#Window configuration
+pygame.init()
+WIDTH, HEIGHT = 1400, 800
+WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 
-surfaces = (
-    (0, 1, 2, 3),  # surface 0
-    (4, 5, 6, 7),  # surface 1
-    (0, 3, 7, 4),  # surface 2
-    (1, 2, 6, 5),  # surface 3
-    (0, 1, 5, 4),  # surface 4
-    (3, 2, 6, 7),  # surface 5
-)
+pygame.display.set_caption('TheMino: Ordinary Domino Game')
 
-normals = [
-    (0, 0, -1),  # surface 0
-    (0, 0, 1),  # surface 1
-    (-1, 0, 0),  # surface 2
-    (1, 0, 0),  # surface 3
-    (0, -1, 0),  # surface 4
-    (0, 1, 0)  # surface 5
-]
+ICON = pygame.image.load("assets/DominoIcon.png").convert_alpha()
+pygame.display.set_icon(ICON)
 
-colors = (
-    (1, 0, 0),
-    (0, 1, 0),
-    (0, 0, 1),
-    (1, 1, 0),
-    (1, 0, 1),
-    (0, 1, 1)
-)
+PLAYERS_NUM = 2
+last_players_num = PLAYERS_NUM
 
-uv_coords = (
-    (1, 1),  # 0
-    (0, 1),  # 1
-    (0, 0),  # 2
-    (1, 0),  # 3
-    (1, 1),  # 4
-    (0, 1),  # 5
-    (0, 0),  # 6
-    (1, 0),  # 7
-)
+BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
+PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert_alpha()
 
-def cube():
-    glBegin(GL_QUADS)
-    for i_surface, surface in enumerate(surfaces):
-        glNormal3fv(normals[i_surface])
-        for vertex in surface:
-            glTexCoord2fv(uv_coords[vertex])
-            glVertex3fv(vertices[vertex])
-    glEnd()
+SLEEP_TIME = .16
+PLAYER__pos = (26, 606)
+PLAYER_NUM_pos = (240, 599)
+can_play_pos = (310, 614)
+turn_pos = (625, 6)
 
-def load_texture(image_path):
-    textureSurface = pygame.image.load(image_path)
-    textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
-    width = textureSurface.get_width()
-    height = textureSurface.get_height()
-    texture = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
+WINDOW.blit(BACKGROUND, (0, 0))
+WINDOW.blit(PLAYER__, PLAYER__pos)
 
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+OBJECTS = [] # list yang berisi semua objek yang ada di game
+LAYERS = {0: Layer()} # dictionary yang berisi semua layer yang ada di game
 
-    return texture
+PLAYERS = [Player(num) for num in range(PLAYERS_NUM)] # list yang berisi semua pemain yang ada di game
 
-def display_bg_texture(jenis_texture):
-    global TableXSize, TableYSize
-    glEnable(GL_TEXTURE_2D)
+#Player
+player = PLAYERS[0] # pemain yang sedang bermain
 
-    # Draw the background
-    glBindTexture(GL_TEXTURE_2D, jenis_texture)
-    glPushMatrix()
-    glTranslatef(0.0, 0.0, 0.0)  # Adjust the z-coordinate to place the button in front of the background
-    # print(f"scale_X: {scale_X}, scale_Y: {scale_Y}")
-    glScalef(TableXSize, TableYSize, 0)  # Adjust the coordinates and size of the button
-    cube()
-    glPopMatrix()
+#computer
+#PLAYERS[0].change_auto()
+PLAYERS[1].change_auto() # mengubah pemain ke mode komputer
+#PLAYERS[2].change_auto()
+#PLAYERS[3].change_auto()
 
-def display_normal_texture(posX, posY, jenis_texture):
-    # Draw the button
-    glBindTexture(GL_TEXTURE_2D, jenis_texture)
-    glPushMatrix()
-    # Adjust the coordinates and size of the button
-    glTranslatef(posX, posY, 2.5)  # Adjust the z-coordinate to place the button in front of the background
-    glScalef(12,12, 0)  
-    cube()
-    glPopMatrix()
-
-def display_init():
-    # buat global variabel
-    global PLAYERS, WINDOW, WIDTH, HEIGHT, BACKGROUND, PLAYER__, PLAYER__pos, PLAYER_NUM_pos, can_play_pos, turn_pos, player, SLEEP_TIME, PLAYERS_NUM, last_players_num, FPS, text_color, bck_color, font, GAME_FINISHED_SOUND, EXTRA_DOMINO_SOUND, BUTTOM_SOUND, OBJECTS, LAYERS, TableSize
-    material_ambient = (0.1, 0.1, 0.1, 1.0)
-    material_diffuse = (0.7, 0.7, 0.7, 1.0)
-    material_specular = (0.5, 0.5, 0.5, 1)
-    pygame.init()
-    WIDTH, HEIGHT = 1400, 800
-    screen_size = (WIDTH, HEIGHT)
-    WINDOW = pygame.display.set_mode(screen_size, DOUBLEBUF | OPENGL)
-    
-
-    pygame.display.set_caption('TheMino: Ordinary Domino Game')
-    glEnable(GL_DEPTH_TEST)
-    glEnable(GL_COLOR_MATERIAL)
-    glEnable(GL_LIGHTING)
-    glEnable(GL_LIGHT0)
-    glEnable(GL_BLEND)
-
-    # Set material properties
-    glMaterialfv(GL_FRONT, GL_AMBIENT, material_ambient)
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse)
-    glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular)
-
-    gluPerspective(70, (screen_size[0] / screen_size[1]), 0.1, 50.0)
-    glTranslatef(0.0, 0.0, -12.0)
-    glLightfv(GL_LIGHT0, GL_POSITION, (1, 1, -1, 0))
+FPS = 60 # frame per second
 
 
-    ICON = pygame.image.load("assets/DominoIcon.png").convert_alpha()
-    # ICON = load_texture("assets/DominoIcon.png")
-    pygame.display.set_icon(ICON)
+text_color = (59, 32, 39) # warna teks
+bck_color = (255, 194, 161) # warna background
 
-    PLAYERS_NUM = 2
-    last_players_num = PLAYERS_NUM
+# X = WIDTH # lebar window
+# Y = HEIGHT # tinggi window
 
-    # BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
-    BACKGROUND = load_texture(f"assets/Table({PLAYERS_NUM}).png")
+font = pygame.font.Font('assets/alagard.ttf', 32)
 
-    # PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert_alpha()
-    PLAYER__ = load_texture(f"assets/Dominos (Interface)/jugador#.png")
+GAME_FINISHED_SOUND =  pygame.mixer.Sound('assets/Audio/gameFinished.wav') # suara yang akan diputar ketika game selesai
+EXTRA_DOMINO_SOUND =  pygame.mixer.Sound('assets/Audio/newDomino.wav') # suara yang akan diputar ketika pemain mengambil kartu tambahan
+BUTTOM_SOUND =  pygame.mixer.Sound('assets/Audio/Buttom.wav') # suara yang akan diputar ketika pemain menekan tombol
 
-    SLEEP_TIME = .16
-    PLAYER__pos = (26, 606)
-    PLAYER_NUM_pos = (240, 599)
-    can_play_pos = (310, 614)
-    turn_pos = (625, 6)
-
-    # WINDOW.blit(BACKGROUND, (0, 0))
-    display_bg_texture(BACKGROUND)
-    # WINDOW.blit(PLAYER__, PLAYER__pos)
-    display_normal_texture(1, 1, PLAYER__)
-
-    OBJECTS = [] # list yang berisi semua objek yang ada di game
-    LAYERS = {0: Layer()} # dictionary yang berisi semua layer yang ada di game
-
-    PLAYERS = [Player(num) for num in range(PLAYERS_NUM)] # list yang berisi semua pemain yang ada di game
-
-    #Player
-    player = PLAYERS[0] # pemain yang sedang bermain
-
-    #computer
-    #PLAYERS[0].change_auto()
-    PLAYERS[1].change_auto() # mengubah pemain ke mode komputer
-    #PLAYERS[2].change_auto()
-    #PLAYERS[3].change_auto()
-
-    FPS = 60 # frame per second
-
-    text_color = (59, 32, 39) # warna teks
-    bck_color = (255, 194, 161) # warna background
-
-    # X = WIDTH # lebar window
-    # Y = HEIGHT # tinggi window
-
-    font = pygame.font.Font('assets/alagard.ttf', 32) # jenis font
-
-    GAME_FINISHED_SOUND =  pygame.mixer.Sound('assets/Audio/gameFinished.wav') # suara yang akan diputar ketika game selesai
-    EXTRA_DOMINO_SOUND =  pygame.mixer.Sound('assets/Audio/newDomino.wav') # suara yang akan diputar ketika pemain mengambil kartu tambahan
-    BUTTOM_SOUND =  pygame.mixer.Sound('assets/Audio/Buttom.wav') # suara yang akan diputar ketika pemain menekan tombol
 
 class Table():
+    """
+    Represents a table for playing the domino game.
+
+    Attributes:
+    - turn (int): Giliran pemain saat ini.
+    - spacing (int): Jarak antara kartu domino di meja.
+    - first_game (bool): Menunjukkan apakah ini adalah permainan pertama atau tidak.
+    - dominoes (numpy.ndarray): Sebuah array yang berisi semua kartu domino dalam permainan.
+    - table_dominoes (numpy.ndarray): Sebuah array yang berisi semua kartu domino di meja.
+    - left_iterator (int): Iterator yang menunjukkan posisi kartu domino yang akan ditempatkan di sisi kiri meja.
+    - right_iterator (int): Iterator yang menunjukkan posisi kartu domino yang akan ditempatkan di sisi kanan meja.
+    - left_positions (list): Daftar yang berisi semua posisi kartu domino yang akan ditempatkan di sisi kiri meja.
+    - right_positions (list): Daftar yang berisi semua posisi kartu domino yang akan ditempatkan di sisi kanan meja.
+    - last_player (None or Player): Pemain yang terakhir memainkan kartu domino.
+    - extra_domino (bool): Menunjukkan apakah pemain telah mengambil kartu domino ekstra atau tidak.
+    - extra_dominoes (None or Domino): Kartu domino ekstra yang diambil oleh pemain.
+    - left_arrow_orientation (bool): Menunjukkan orientasi tombol panah kiri.
+    - left_arrow (Button): Tombol panah kiri.
+    - right_arrow (Button): Tombol panah kanan.
+    - extra_x (int): Koordinat x dari sprite kartu domino ekstra.
+    - extra_y (int): Koordinat y dari sprite kartu domino ekstra.
+    - capicua_bool (bool): Menunjukkan apakah capicua (kartu domino dengan nilai yang sama di kedua ujungnya) telah dimainkan atau tidak.
+    """
 
     def __init__(self):
         """
@@ -251,17 +151,13 @@ class Table():
         return domino
     
     def extra_domino_sprite(self):
-        # extra_domino = pygame.image.load(f"assets/Dominos (Interface)/+.png").convert_alpha()
-        extra_domino = load_texture(f"assets/Dominos (Interface)/+.png")
-        # WINDOW.blit(extra_domino, (self.extra_x, self.extra_y))
-        display_normal_texture(self.extra_x, self.extra_y, extra_domino)
+        extra_domino = pygame.image.load(f"assets/Dominos (Interface)/+.png").convert_alpha()
+        WINDOW.blit(extra_domino, (self.extra_x, self.extra_y))
 
     def draw_player_number(self, player_number):
         global player_to_play
-        # player_to_play = pygame.image.load(f"assets/Dominos (Interface)/{player_number + 1}p.png").convert_alpha()
-        player_to_play = load_texture(f"assets/Dominos (Interface)/{player_number + 1}p.png")
-        # WINDOW.blit(player_to_play, PLAYER_NUM_pos)
-        display_normal_texture(PLAYER_NUM_pos[0], PLAYER_NUM_pos[1], player_to_play)
+        player_to_play = pygame.image.load(f"assets/Dominos (Interface)/{player_number + 1}p.png").convert_alpha()
+        WINDOW.blit(player_to_play, PLAYER_NUM_pos)
         update_layers()
 
     def draw_player_dominoes(self, player_idx):
@@ -504,14 +400,11 @@ class Table():
             if dominoes_amount >= 7:
                 dominoes_amount = 7
 
-            # num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{dominoes_amount}.png").convert_alpha()
-            num_dominoes = load_texture(f"assets/Dominos (Interface)/{dominoes_amount}.png")
-            # player_num = pygame.image.load(f"assets/Dominos (Interface)/{player.num + 1}p.png").convert_alpha()
-            player_num = load_texture(f"assets/Dominos (Interface)/{player.num + 1}p.png")
+            num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{dominoes_amount}.png").convert_alpha()
+            player_num = pygame.image.load(f"assets/Dominos (Interface)/{player.num + 1}p.png").convert_alpha()
 
             if self.turn == player.num:
-                # player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
-                player_turn = load_texture(f"assets/Dominos (Interface)/turn.png")
+                player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
                 self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
                 
                 if self.extra_domino and sprite_added:
@@ -519,15 +412,11 @@ class Table():
                     sprite_added = False
 
             else:
-                # player_turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
-                player_turn = load_texture(f"assets/Dominos (Interface)/0.png")
+                player_turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
 
-            # WINDOW.blit(player_turn, (turn_x, turn_y))
-            display_normal_texture(turn_x, turn_y, player_turn)
-            # WINDOW.blit(num_dominoes, (x, y))
-            display_normal_texture(x, y, num_dominoes)
-            # WINDOW.blit(player_num, (num_x, num_y))
-            display_normal_texture(num_x, num_y, player_num)
+            WINDOW.blit(player_turn, (turn_x, turn_y))
+            WINDOW.blit(num_dominoes, (x, y))
+            WINDOW.blit(player_num, (num_x, num_y))
 
             y += 65
             num_y += 64
@@ -597,12 +486,10 @@ class Table():
 
             aux = gameManager.check_player_dominoes(PLAYERS[TURN])
             if aux:
-                # can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
-                can_play = load_texture(f"assets/Dominos (Interface)/0.png")
+                can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
 
             else:
-                # can_play = pygame.image.load(f"assets/Dominos (Interface)/no vas.png").convert_alpha()
-                can_play = load_texture(f"assets/Dominos (Interface)/no vas.png")
+                can_play = pygame.image.load(f"assets/Dominos (Interface)/no vas.png").convert_alpha()
                 if len(self.table_dominoes) < PLAYERS_NUM and len(self.dominoes) == 0:
                     if PLAYERS_NUM == 2:
                         try: PLAYERS[player_idx - 1].add_points(30)
@@ -663,8 +550,7 @@ class Table():
 
             update_layers()
 
-        # can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
-        can_play = load_texture(f"assets/Dominos (Interface)/0.png")
+        can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
         time.sleep(SLEEP_TIME)
         return played
 
@@ -1000,23 +886,16 @@ class MinimaxSolver():
         return min_child, min_utility
 
 
-def update_layers(): # fungsi yang akan mengupdate semua layer yang ada di game
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    # BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
-    BACKGROUND = load_texture(f"assets/Table({PLAYERS_NUM}).png")
-    # WINDOW.blit(BACKGROUND, (0, 0))
-    display_bg_texture(BACKGROUND)
+def update_layers():
+    BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
+    WINDOW.blit(BACKGROUND, (0, 0))
     
-    # WINDOW.blit(player_to_play, PLAYER_NUM_pos)
-    display_normal_texture(PLAYER_NUM_pos[0], PLAYER_NUM_pos[1], player_to_play)
-    # WINDOW.blit(PLAYER__, PLAYER__pos)
-    display_normal_texture(PLAYER__pos[0], PLAYER__pos[1], PLAYER__)
+    WINDOW.blit(player_to_play, PLAYER_NUM_pos)
+    WINDOW.blit(PLAYER__, PLAYER__pos)
 
     try:
-        # WINDOW.blit(can_play, can_play_pos)
-        display_normal_texture(can_play_pos[0], can_play_pos[1], can_play)
-        # WINDOW.blit(turn, turn_pos)
-        display_normal_texture(turn_pos[0], turn_pos[1], turn)
+        WINDOW.blit(can_play, can_play_pos)
+        WINDOW.blit(turn, turn_pos)
     except:
         pass
 
@@ -1058,7 +937,6 @@ def run():
     global turn
     global TURN
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     table = Table()
     table.start_game()
     gameManager = GameManager()
@@ -1069,8 +947,7 @@ def run():
     turn = None
     TURN = 0
 
-    # can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
-    can_play = load_texture(f"assets/Dominos (Interface)/0.png")
+    can_play = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
     for turnNum in range(PLAYERS_NUM):
         try:
             if PLAYERS[turnNum].manual:
@@ -1090,11 +967,9 @@ def run():
                 sys.exit()
 
         if PLAYERS[TURN].manual:
-            # turn = pygame.image.load(f"assets/Dominos (Interface)/Tu Turno.png").convert_alpha()
-            turn = load_texture(f"assets/Dominos (Interface)/Tu Turno.png")
+            turn = pygame.image.load(f"assets/Dominos (Interface)/Tu Turno.png").convert_alpha()
             played = table.player_plays(TURN)
-            # turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
-            turn = load_texture(f"assets/Dominos (Interface)/0.png")
+            turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
 
         else:
             state = Fake_Table(state=table.table_dominoes)
@@ -1220,8 +1095,11 @@ def run():
 
 
 def intro():
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     skip = False
+    # intro = pygame.image.load(f"assets/Dominos (Interface)/Intro/dominoIntro10.png").convert_alpha()
+    # WINDOW.blit(intro, (0, 0)) # (0, 0) adalah posisi x dan y dari gambar intro\
+    # pygame.display.flip()
+    # pygame.display.update()
 
     for i in range(2, 10):
         for event in pygame.event.get():
@@ -1236,33 +1114,23 @@ def intro():
         if skip:
             break
 
-        # intro = pygame.image.load(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.png").convert_alpha()
-        intro = load_texture(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.png")
+        intro = pygame.image.load(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.png").convert_alpha()
             
-        # WINDOW.blit(intro, (0, 0)) # (0, 0) adalah posisi x dan y dari gambar intro
-        display_normal_texture(0, 0, intro)
+        WINDOW.blit(intro, (0, 0)) # (0, 0) adalah posisi x dan y dari gambar intro
         pygame.display.flip()
         # pygame.display.update()
             
-        time.sleep(SLEEP_TIME*2)
-        # time.sleep(SLEEP_TIME*5)
+        time.sleep(SLEEP_TIME*0.175)
 
     if skip != True:
         time.sleep(SLEEP_TIME*3.6)
 
 
-def check_gl_error():
-    error = glGetError()
-    if error != GL_NO_ERROR:
-        print(f"OpenGL Error: {error}")
-
 def main():
     global OBJECTS, LAYERS, PLAYERS_NUM, WINDOW, SLEEP_TIME, PLAYERS, last_players_num
-    display_init()
     intro()
 
     while True:
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         OBJECTS, LAYERS = run()
         update_layers()
 
@@ -1347,10 +1215,8 @@ def main():
                     PLAYERS[1].change_auto()
                     PLAYERS[2].change_auto()
                     PLAYERS[0].change_auto()
-
-        pygame.display.flip()
+        
         pygame.time.wait(1000)
 
 
-if __name__ == "__main__":
-    main()
+main()

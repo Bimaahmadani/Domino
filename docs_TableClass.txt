@@ -1,0 +1,23 @@
+    """
+    Represents a table for playing the domino game.
+
+    Attributes:
+    - turn (int): Giliran pemain saat ini.
+    - spacing (int): Jarak antara kartu domino di meja.
+    - first_game (bool): Menunjukkan apakah ini adalah permainan pertama atau tidak.
+    - dominoes (numpy.ndarray): Sebuah array yang berisi semua kartu domino dalam permainan.
+    - table_dominoes (numpy.ndarray): Sebuah array yang berisi semua kartu domino di meja.
+    - left_iterator (int): Iterator yang menunjukkan posisi kartu domino yang akan ditempatkan di sisi kiri meja.
+    - right_iterator (int): Iterator yang menunjukkan posisi kartu domino yang akan ditempatkan di sisi kanan meja.
+    - left_positions (list): Daftar yang berisi semua posisi kartu domino yang akan ditempatkan di sisi kiri meja.
+    - right_positions (list): Daftar yang berisi semua posisi kartu domino yang akan ditempatkan di sisi kanan meja.
+    - last_player (None or Player): Pemain yang terakhir memainkan kartu domino.
+    - extra_domino (bool): Menunjukkan apakah pemain telah mengambil kartu domino ekstra atau tidak.
+    - extra_dominoes (None or Domino): Kartu domino ekstra yang diambil oleh pemain.
+    - left_arrow_orientation (bool): Menunjukkan orientasi tombol panah kiri.
+    - left_arrow (Button): Tombol panah kiri.
+    - right_arrow (Button): Tombol panah kanan.
+    - extra_x (int): Koordinat x dari sprite kartu domino ekstra.
+    - extra_y (int): Koordinat y dari sprite kartu domino ekstra.
+    - capicua_bool (bool): Menunjukkan apakah capicua (kartu domino dengan nilai yang sama di kedua ujungnya) telah dimainkan atau tidak.
+    """
