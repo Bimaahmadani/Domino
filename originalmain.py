@@ -1,4 +1,4 @@
-from assets.objects import Domino, Player, Button
+from assets.originalobjects import Domino, Player, Button
 from pygame.sprite import Group as Layer
 from pygame.locals import *
 from OpenGL.GL import *
@@ -64,53 +64,6 @@ GAME_FINISHED_SOUND =  pygame.mixer.Sound('assets/Audio/gameFinished.wav') # sua
 EXTRA_DOMINO_SOUND =  pygame.mixer.Sound('assets/Audio/newDomino.wav') # suara yang akan diputar ketika pemain mengambil kartu tambahan
 BUTTOM_SOUND =  pygame.mixer.Sound('assets/Audio/Buttom.wav') # suara yang akan diputar ketika pemain menekan tombol
 
-
-class Table():
-    """
-    Represents a table for playing the domino game.
-
-    Attributes:
-    - turn (int): Giliran pemain saat ini.
-    - spacing (int): Jarak antara kartu domino di meja.
-    - first_game (bool): Menunjukkan apakah ini adalah permainan pertama atau tidak.
-    - dominoes (numpy.ndarray): Sebuah array yang berisi semua kartu domino dalam permainan.
-    - table_dominoes (numpy.ndarray): Sebuah array yang berisi semua kartu domino di meja.
-    - left_iterator (int): Iterator yang menunjukkan posisi kartu domino yang akan ditempatkan di sisi kiri meja.
-    - right_iterator (int): Iterator yang menunjukkan posisi kartu domino yang akan ditempatkan di sisi kanan meja.
-    - left_positions (list): Daftar yang berisi semua posisi kartu domino yang akan ditempatkan di sisi kiri meja.
-    - right_positions (list): Daftar yang berisi semua posisi kartu domino yang akan ditempatkan di sisi kanan meja.
-    - last_player (None or Player): Pemain yang terakhir memainkan kartu domino.
-    - extra_domino (bool): Menunjukkan apakah pemain telah mengambil kartu domino ekstra atau tidak.
-    - extra_dominoes (None or Domino): Kartu domino ekstra yang diambil oleh pemain.
-    - left_arrow_orientation (bool): Menunjukkan orientasi tombol panah kiri.
-    - left_arrow (Button): Tombol panah kiri.
-    - right_arrow (Button): Tombol panah kanan.
-    - extra_x (int): Koordinat x dari sprite kartu domino ekstra.
-    - extra_y (int): Koordinat y dari sprite kartu domino ekstra.
-    - capicua_bool (bool): Menunjukkan apakah capicua (kartu domino dengan nilai yang sama di kedua ujungnya) telah dimainkan atau tidak.
-    """
-
-    def __init__(self):
-        """
-        Initializes a new instance of the Table class.
-        """
-        self.turn = 0
-        self.spacing = 95
-        self.first_game = True
-        self.dominoes = np.array([], dtype=object)
-        self.table_dominoes = np.array([], dtype=object)
-        self.left_iterator = 0
-        self.right_iterator = 0
-        self.left_positions = []
-        self.right_positions = []
-        self.last_player = None
-        self.extra_domino = False
-        self.extra_dominoes = None
-        self.left_arrow_orientation = True
-        self.left_arrow = Button("arrow1.png")
-        self.right_arrow = Button("arrow1.png")
-        self.extra_x, self.extra_y = 0, 0
-        self.capicua_bool = False
 class Table():
     def __init__(self): # fungsi yang akan dijalankan ketika objek Table dibuat, Table adalah objek yang merepresentasikan meja permainan
         self.turn = 0 # giliran pemain
@@ -119,8 +72,8 @@ class Table():
         self.dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di game, dtype=object digunakan agar list dapat menyimpan objek diantaranya (string, integer, float, array lain, dll)
         self.table_dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di meja
 
-        self.left_iterator = 0 # iterator yang menandakan posisi kartu domino yang akan ditaruh di sisi kiri meja
-        self.right_iterator = 0 # iterator yang menandakan posisi kartu domino yang akan ditaruh di sisi kanan meja
+        self.left_iterator = 0 # penempatan domino terpilih di sisi kanan domino awal / domino sebelumnya
+        self.right_iterator = 0 # penempatan domino terpilih di sisi kiri domino awal / domino sebelumnya
         self.left_positions = [] # list yang berisi semua posisi kartu domino yang akan ditaruh di sisi kiri meja
         self.right_positions = [] # list yang berisi semua posisi kartu domino yang akan ditaruh di sisi kanan meja
 
@@ -139,7 +92,10 @@ class Table():
     def dominoes_distribution(self):
         for i in range(7):
             for j in range(i, 7):
-                self.dominoes = np.append(self.dominoes, Domino((i, j)))
+                print(f"Domino var in line 149: \ni: {i} | j: {j}")
+                # dibuat instancenya dulu baru dimasukkan ke list 
+                # dan selanjutnya ditampilkan random di line 102 (player.add_domino(self.draw_random()))
+                self.dominoes = np.append(self.dominoes, Domino((i, j))) 
 
         for player in PLAYERS:
             for _ in range(7):
@@ -147,6 +103,7 @@ class Table():
     
     def draw_random(self):
         domino = np.random.choice(self.dominoes)
+        print(f"Domino var in line 150: {domino}")
         self.dominoes = np.delete(self.dominoes, np.where(self.dominoes == domino))
         return domino
     
@@ -166,7 +123,7 @@ class Table():
             y_padding = 160
 
             x, y = 64, 717
-            aux = 1
+            aux = 1 # aux digunakan untuk menghitung jumlah kartu domino yang sudah ditampilkan
 
             for domino in PLAYERS[player_idx].dominoes:
                 if domino not in OBJECTS:
@@ -405,7 +362,7 @@ class Table():
 
             if self.turn == player.num:
                 player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
-                self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
+                self.extra_x, self.extra_y = turn_x - 46, turn_y - 26
                 
                 if self.extra_domino and sprite_added:
                     self.extra_domino_sprite()
@@ -582,7 +539,7 @@ class Table():
         self.create_buttons()
 
         if self.first_game:
-            #self.draw_player_interface(player)
+            self.draw_player_interface(player)
             self.create_right_positions()
             self.create_left_positions()
             self.first_game = False

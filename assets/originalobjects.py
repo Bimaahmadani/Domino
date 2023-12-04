@@ -5,102 +5,6 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-# create 3D cube
-vertices = (
-    (1, 1, 1),  # 0
-    (-1, 1, 1),  # 1
-    (-1, -1, 1),  # 2
-    (1, -1, 1),  # 3
-    (1, 1, -1),  # 4
-    (-1, 1, -1),  # 5
-    (-1, -1, -1),  # 6
-    (1, -1, -1),  # 7
-)
-
-surfaces = (
-    (0, 1, 2, 3),  # surface 0
-    (4, 5, 6, 7),  # surface 1
-    (0, 3, 7, 4),  # surface 2
-    (1, 2, 6, 5),  # surface 3
-    (0, 1, 5, 4),  # surface 4
-    (3, 2, 6, 7),  # surface 5
-)
-
-normals = [
-    (0, 0, -1),  # surface 0
-    (0, 0, 1),  # surface 1
-    (-1, 0, 0),  # surface 2
-    (1, 0, 0),  # surface 3
-    (0, -1, 0),  # surface 4
-    (0, 1, 0)  # surface 5
-]
-
-colors = (
-    (1, 0, 0),
-    (0, 1, 0),
-    (0, 0, 1),
-    (1, 1, 0),
-    (1, 0, 1),
-    (0, 1, 1)
-)
-
-uv_coords = (
-    (1, 1),  # 0
-    (0, 1),  # 1
-    (0, 0),  # 2
-    (1, 0),  # 3
-    (1, 1),  # 4
-    (0, 1),  # 5
-    (0, 0),  # 6
-    (1, 0),  # 7
-)
-
-def cube():
-    glBegin(GL_QUADS)
-    for i_surface, surface in enumerate(surfaces):
-        # print(f"surface: {surface}")
-        glNormal3fv(normals[i_surface])
-        for vertex in surface:
-            # print(f"vertex: {vertex}")
-            glTexCoord2fv(uv_coords[vertex])
-            glVertex3fv(vertices[vertex])
-    glEnd()
-
-
-def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
-    # Draw the button
-    glBindTexture(GL_TEXTURE_2D, jenis_texture)
-    glPushMatrix()
-    # Adjust the coordinates and size of the button
-    glTranslatef(posX, posY, 2.5)  # Adjust the z-coordinate to place the button in front of the background
-    glScalef(scaleX, scaleY, 0) 
-    cube()
-    glPopMatrix()
-
-def load_texture(image_path):
-    print(f"image_path: {image_path}")
-    textureSurface = pygame.image.load(image_path)
-    textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
-    width = textureSurface.get_width()
-    height = textureSurface.get_height()
-    texture = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
-
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-
-    return texture
-
-
-class BoundingBox:
-    # BoundingBox class for representing a rectangular bounding box
-    def __init__(self, left, right, bottom, top):
-        self.left = left
-        self.right = right
-        self.bottom = bottom
-        self.top = top
-
-
 class GameObject(pygame.sprite.Sprite):
     def __init__(self, x=0, y=0, layer=0, x_scale=1, y_scale=1, orientation=0, img_path=os.path.join("assets", "empty.png")):
         super().__init__()
@@ -113,17 +17,6 @@ class GameObject(pygame.sprite.Sprite):
         self.orientation = orientation
         self.load_image(img_path)
         self.image_path = img_path
-        self.width = 0
-        self.height = 0
-        self.bounding_box = BoundingBox(0, 0, 0, 0)  # Initialize a default bounding box
-        # print(f"image_path: {self.image_path}")
-        # Awal Var baru
-        # self.image_path = img_path
-        # print(f"img_path: {img_path}")
-        # self.image_load = load_texture(img_path)
-        # print(f"self.image_load line 110: {self.image_load}")
-        # self.show_image = display_normal_texture(self.x, self.y, self.x_scale, self.y_scale, self.image_load)
-        # Akhir Var baru
         self.blank_path = os.path.join("assets", "Dominos (Interface)", "0.png")
         self.change_vals = False
 
@@ -132,23 +25,19 @@ class GameObject(pygame.sprite.Sprite):
         self.change_vals = False
 
         try:
-            # self.image = pygame.image.load(path).convert_alpha()
-            self.image = load_texture(path)
-            print(f"self.image line 122 inside try except: {self.image}")
+            self.image = pygame.image.load(path).convert_alpha()
+            # self.image = load_texture(path)
         except:
             path = change_vals(path, 22, 24)
-            # self.image = pygame.image.load(path).convert_alpha()
-            self.image = load_texture(path)
+            self.image = pygame.image.load(path).convert_alpha()
+            # self.image = load_texture(path)
             self.change_vals = True
 
-        print(f"self.image line 130 outside try except: {self.image}")
-        # self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
-        # self.image = pygame.transform.rotate(self.image, self.orientation)
-        # self.rect = self.image.get_rect()
-        self.width = self.image_texture.get_width()
-        self.height = self.image_texture.get_height()
-        # Update the bounding box based on the size of the loaded texture
-        self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
+        self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
+        print(f"self.image.get_width(): {self.image.get_width()}")
+        self.image = pygame.transform.rotate(self.image, self.orientation)
+        self.rect = self.image.get_rect()
+        print(f"self.rect: {self.rect}")
         # print(f"image.get_width(): {self.image.get_width()}")
         # print(f"image.get_height(): {self.image.get_height()}")
         # print(f"self.rect: {self.rect}")
@@ -180,11 +69,6 @@ class GameObject(pygame.sprite.Sprite):
 
     def show(self):
         self.load_image(self.image_path)
-        # openGL
-        # image_loaded = load_texture(self.image_path)
-        # print(f"self.image_load line 165: {self.image_load}")
-        # display_normal_texture(self.x, self.y, self.x_scale, self.y_scale, image_loaded)
-
 
     def add_position(self, x, y):
         self.position = np.array([x, y])
@@ -192,7 +76,6 @@ class GameObject(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         # glTranslatef(x, y, 2.5)
-        # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     def change_orientation(self, new_orientation):
         self.orientation = new_orientation
@@ -230,7 +113,7 @@ class Domino(GameObject):
 
         else:
             self.path = f"{vals[0]}-{vals[1]}.png"
-            # print(f"path in objects.py line 211: {self.path}")
+            print(f"path in objects.py line 211: {self.path}")
             self.in_screen = False
 
         super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=0, **kwargs)
@@ -375,7 +258,7 @@ class Player:
         self.num = num
 
     def add_domino(self, domino):
-        # print(f"domino onjects 355: {domino}")
+        print(f"domino onjects 355: {domino}")
         self.dominoes = np.append(self.dominoes, domino)
 
     def remove_all(self):

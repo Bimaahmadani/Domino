@@ -9,8 +9,8 @@ import pygame
 import time
 import sys
 
-TableXSize = 15
-TableYSize = 8.7
+TableXSize = 14.85
+TableYSize = 8.4
 
 # create 3D cube
 vertices = (
@@ -65,8 +65,10 @@ uv_coords = (
 def cube():
     glBegin(GL_QUADS)
     for i_surface, surface in enumerate(surfaces):
+        # print(f"surface: {surface}")
         glNormal3fv(normals[i_surface])
         for vertex in surface:
+            # print(f"vertex: {vertex}")
             glTexCoord2fv(uv_coords[vertex])
             glVertex3fv(vertices[vertex])
     glEnd()
@@ -96,20 +98,24 @@ def display_bg_texture(jenis_texture):
     glScalef(TableXSize, TableYSize, 0)  # Adjust the coordinates and size of the button
     cube()
     glPopMatrix()
+    glDisable(GL_TEXTURE_2D)
 
-def display_normal_texture(posX, posY, jenis_texture):
+def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
     # Draw the button
+    glEnable(GL_TEXTURE_2D) # KEMUNGKINAN NGEBUG
     glBindTexture(GL_TEXTURE_2D, jenis_texture)
     glPushMatrix()
     # Adjust the coordinates and size of the button
     glTranslatef(posX, posY, 2.5)  # Adjust the z-coordinate to place the button in front of the background
-    glScalef(12,12, 0)  
+    glScalef(scaleX, scaleY, 0) 
     cube()
     glPopMatrix()
+    glDisable(GL_TEXTURE_2D)
 
 def display_init():
     # buat global variabel
-    global PLAYERS, WINDOW, WIDTH, HEIGHT, BACKGROUND, PLAYER__, PLAYER__pos, PLAYER_NUM_pos, can_play_pos, turn_pos, player, SLEEP_TIME, PLAYERS_NUM, last_players_num, FPS, text_color, bck_color, font, GAME_FINISHED_SOUND, EXTRA_DOMINO_SOUND, BUTTOM_SOUND, OBJECTS, LAYERS, TableSize
+    global PLAYERS, WINDOW, WIDTH, HEIGHT, BACKGROUND, PLAYER__, PLAYER__pos, PLAYER_NUM_pos, can_play_pos, turn_pos, player, SLEEP_TIME, PLAYERS_NUM, last_players_num, FPS, text_color, bck_color, font, GAME_FINISHED_SOUND, \
+    EXTRA_DOMINO_SOUND, BUTTOM_SOUND, OBJECTS, LAYERS, PLAYER__scale, PLAYER_NUM_scale
     material_ambient = (0.1, 0.1, 0.1, 1.0)
     material_diffuse = (0.7, 0.7, 0.7, 1.0)
     material_specular = (0.5, 0.5, 0.5, 1)
@@ -150,21 +156,24 @@ def display_init():
     PLAYER__ = load_texture(f"assets/Dominos (Interface)/jugador#.png")
 
     SLEEP_TIME = .16
-    PLAYER__pos = (26, 606)
-    PLAYER_NUM_pos = (240, 599)
+    PLAYER__scale = (1.4, 0.6)
+    PLAYER__pos = (-9.5, -3.45) # TAk GANTI
+    PLAYER_NUM_scale = (0.5, 0.6)
+    PLAYER_NUM_pos = (-7.55, -3.45)
     can_play_pos = (310, 614)
     turn_pos = (625, 6)
 
     # WINDOW.blit(BACKGROUND, (0, 0))
     display_bg_texture(BACKGROUND)
     # WINDOW.blit(PLAYER__, PLAYER__pos)
-    display_normal_texture(1, 1, PLAYER__)
+    display_normal_texture(PLAYER__pos[0], PLAYER__pos[1], PLAYER__scale[0], PLAYER__scale[1], PLAYER__)
 
     OBJECTS = [] # list yang berisi semua objek yang ada di game
     LAYERS = {0: Layer()} # dictionary yang berisi semua layer yang ada di game
+    # print(f"LAYERS: {LAYERS}")
 
     PLAYERS = [Player(num) for num in range(PLAYERS_NUM)] # list yang berisi semua pemain yang ada di game
-
+    # print(f"PLAYERS: {PLAYERS}")
     #Player
     player = PLAYERS[0] # pemain yang sedang bermain
 
@@ -189,32 +198,9 @@ def display_init():
     BUTTOM_SOUND =  pygame.mixer.Sound('assets/Audio/Buttom.wav') # suara yang akan diputar ketika pemain menekan tombol
 
 class Table():
-
-    def __init__(self):
-        """
-        Initializes a new instance of the Table class.
-        """
-        self.turn = 0
-        self.spacing = 95
-        self.first_game = True
-        self.dominoes = np.array([], dtype=object)
-        self.table_dominoes = np.array([], dtype=object)
-        self.left_iterator = 0
-        self.right_iterator = 0
-        self.left_positions = []
-        self.right_positions = []
-        self.last_player = None
-        self.extra_domino = False
-        self.extra_dominoes = None
-        self.left_arrow_orientation = True
-        self.left_arrow = Button("arrow1.png")
-        self.right_arrow = Button("arrow1.png")
-        self.extra_x, self.extra_y = 0, 0
-        self.capicua_bool = False
-class Table():
     def __init__(self): # fungsi yang akan dijalankan ketika objek Table dibuat, Table adalah objek yang merepresentasikan meja permainan
         self.turn = 0 # giliran pemain
-        self.spacing = 95 # jarak antar kartu
+        self.spacing = 0.25 # jarak antar kartu (TAK UBAH DARI SEBELUMNYA 96)
         self.first_game = True # atribut yang menandakan apakah game ini adalah game pertama atau tidak
         self.dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di game, dtype=object digunakan agar list dapat menyimpan objek diantaranya (string, integer, float, array lain, dll)
         self.table_dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di meja
@@ -240,6 +226,7 @@ class Table():
         for i in range(7):
             for j in range(i, 7):
                 self.dominoes = np.append(self.dominoes, Domino((i, j)))
+                print(f"self.dominoes: {self.dominoes[-1]}")
 
         for player in PLAYERS:
             for _ in range(7):
@@ -254,37 +241,45 @@ class Table():
         # extra_domino = pygame.image.load(f"assets/Dominos (Interface)/+.png").convert_alpha()
         extra_domino = load_texture(f"assets/Dominos (Interface)/+.png")
         # WINDOW.blit(extra_domino, (self.extra_x, self.extra_y))
-        display_normal_texture(self.extra_x, self.extra_y, extra_domino)
+        # display_normal_texture(self.extra_x, self.extra_y, extra_domino)
+        print(f"line 265:\nself.extra_x: {self.extra_x}, self.extra_y: {self.extra_y}")
+        display_normal_texture(self.extra_x, self.extra_y, 0.30, 0.30, extra_domino)
 
     def draw_player_number(self, player_number):
         global player_to_play
         # player_to_play = pygame.image.load(f"assets/Dominos (Interface)/{player_number + 1}p.png").convert_alpha()
         player_to_play = load_texture(f"assets/Dominos (Interface)/{player_number + 1}p.png")
         # WINDOW.blit(player_to_play, PLAYER_NUM_pos)
-        display_normal_texture(PLAYER_NUM_pos[0], PLAYER_NUM_pos[1], player_to_play)
+        display_normal_texture(PLAYER_NUM_pos[0], PLAYER_NUM_pos[1], PLAYER_NUM_scale[0], PLAYER_NUM_scale[1], player_to_play)
         update_layers()
 
     def draw_player_dominoes(self, player_idx):
         if PLAYERS[player_idx].manual:
-            x_padding = 68
-            y_padding = 160
+            # print("TRUE MANUAL MASBRO")
+            x_padding = 0.5
+            y_padding = 0.5
 
-            x, y = 64, 717
+            x, y = -3.0, -3.6
             aux = 1
 
             for domino in PLAYERS[player_idx].dominoes:
+                # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+                # print(f"PLAYERS[player_idx].dominoes: {PLAYERS}")
+                # print(f"domino: {domino}")
                 if domino not in OBJECTS:
+                    # print("domino not in OBJECTS")
                     OBJECTS.append(domino)
 
                 domino.add_position(x, y)
                 domino.show()
 
                 if aux == 7:
-                    x, y = 64, 717
+                    print("aux == 7")
+                    x, y = -3.0, -3.6
                     y -= y_padding
                     aux = 0
 
-                    y_padding += 100
+                    y_padding += 0.3
                 
                 else:
                     x += x_padding
@@ -300,7 +295,7 @@ class Table():
                     domino.hide()
 
     def draw_extra_dominoes(self):
-        self.extra_dominoes = Domino([7, 7], x=548, y=717)
+        self.extra_dominoes = Domino([7, 7], x=-3.0, y=-3.6)
         OBJECTS.insert(0, self.extra_dominoes)
 
     def hide_extra_dominoes(self):
@@ -493,9 +488,12 @@ class Table():
         self.right_iterator += 1
 
     def players_dominoes(self):
-        x, y = 1290, 30
-        num_x, num_y = 1240, 12
-        turn_x, turn_y = 1160, 25
+        x, y = 10.675, 4.91
+        x_scale, y_scale = 0.7, 0.175
+        num_x, num_y = 9.6, 4.91
+        num_x_scale, num_y_scale = 0.3, 0.40
+        turn_x, turn_y = 8.1, 4.91
+        turn_x_scale, turn_y_scale = 0.5, 0.30
         sprite_added = True
 
         for player in PLAYERS:
@@ -512,7 +510,8 @@ class Table():
             if self.turn == player.num:
                 # player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
                 player_turn = load_texture(f"assets/Dominos (Interface)/turn.png")
-                self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
+                # self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
+                self.extra_x, self.extra_y = turn_x-1.1, turn_y+1.45
                 
                 if self.extra_domino and sprite_added:
                     self.extra_domino_sprite()
@@ -523,23 +522,25 @@ class Table():
                 player_turn = load_texture(f"assets/Dominos (Interface)/0.png")
 
             # WINDOW.blit(player_turn, (turn_x, turn_y))
-            display_normal_texture(turn_x, turn_y, player_turn)
+            display_normal_texture(turn_x, turn_y, turn_x_scale, turn_y_scale, player_turn)
             # WINDOW.blit(num_dominoes, (x, y))
-            display_normal_texture(x, y, num_dominoes)
+            # display_normal_texture(x, y, num_dominoes)
+            display_normal_texture(x, y, x_scale, y_scale, num_dominoes)
             # WINDOW.blit(player_num, (num_x, num_y))
-            display_normal_texture(num_x, num_y, player_num)
+            # display_normal_texture(num_x, num_y, player_num)
+            display_normal_texture(num_x, num_y, num_x_scale, num_y_scale, player_num)
 
-            y += 65
-            num_y += 64
-            turn_y += 64
+            y += 1.075
+            num_y += 1.075
+            turn_y += 1.04
 
     def activate_arrows(self):
         if self.left_arrow_orientation:
             self.left_arrow.change_orientation_sprite()
             self.left_arrow_orientation = False
 
-        self.right_arrow.add_position(576, 636)
-        self.left_arrow.add_position(476, 636)
+        self.right_arrow.add_position(-1, -4.0)
+        self.left_arrow.add_position(0.5, -4.0)
         self.right_arrow.activate()
         self.left_arrow.activate()
 
@@ -564,12 +565,12 @@ class Table():
         FULLSCREEN = Button("FULLSCREEN_button1.png")
         EXIT = Button("EXIT_button1.png")
 
-        x, y = 598, 678
+        x, y = 3.8,-4.3
         buttons = [PASS, REPEAT, FULLSCREEN, EXIT]
 
         for button in buttons:
             button.add_position(x, y)
-            y += 26
+            # y += 26
 
         for button in buttons:
             button.activate()
@@ -1008,9 +1009,9 @@ def update_layers(): # fungsi yang akan mengupdate semua layer yang ada di game
     display_bg_texture(BACKGROUND)
     
     # WINDOW.blit(player_to_play, PLAYER_NUM_pos)
-    display_normal_texture(PLAYER_NUM_pos[0], PLAYER_NUM_pos[1], player_to_play)
+    display_normal_texture(PLAYER_NUM_pos[0], PLAYER_NUM_pos[1], PLAYER_NUM_scale[0], PLAYER_NUM_scale[1], player_to_play)
     # WINDOW.blit(PLAYER__, PLAYER__pos)
-    display_normal_texture(PLAYER__pos[0], PLAYER__pos[1], PLAYER__)
+    display_normal_texture(PLAYER__pos[0], PLAYER__pos[1], PLAYER__scale[0], PLAYER__scale[1], PLAYER__)
 
     try:
         # WINDOW.blit(can_play, can_play_pos)
@@ -1126,7 +1127,7 @@ def run():
                     table.add_domino_to_table(domino_to_play, "right")
 
                 PLAYERS[TURN].dominoes = np.delete(PLAYERS[TURN].dominoes, np.where(PLAYERS[TURN].dominoes == domino))
-                add_domino_to_layers(domino_to_play)
+                add_domino_to_layers(domino_to_play) # draw domino yang diluncurkan / dipilih musuh
                 played = True
             
             elif best_state is None and len(table.dominoes) != 0:
@@ -1220,7 +1221,6 @@ def run():
 
 
 def intro():
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     skip = False
 
     for i in range(2, 10):
@@ -1237,14 +1237,15 @@ def intro():
             break
 
         # intro = pygame.image.load(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.png").convert_alpha()
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         intro = load_texture(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.png")
             
         # WINDOW.blit(intro, (0, 0)) # (0, 0) adalah posisi x dan y dari gambar intro
-        display_normal_texture(0, 0, intro)
+        display_bg_texture(intro)
         pygame.display.flip()
         # pygame.display.update()
             
-        time.sleep(SLEEP_TIME*2)
+        time.sleep(SLEEP_TIME*0.175)
         # time.sleep(SLEEP_TIME*5)
 
     if skip != True:
