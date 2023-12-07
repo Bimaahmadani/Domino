@@ -1,9 +1,9 @@
+# pyinstaller main.py --onefile --noconsole --add-data "assets;assets" --add-data "venv;venv"
 from assets.originalobjects import Domino, Player, Button
 from pygame.sprite import Group as Layer
 from pygame.locals import *
-from OpenGL.GL import *
-from OpenGL.GLU import *
 import numpy as np
+# import asyncio
 import random
 import pygame
 import time
@@ -15,7 +15,7 @@ pygame.init()
 WIDTH, HEIGHT = 1400, 800
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
 
-pygame.display.set_caption('TheMino: Ordinary Domino Game')
+pygame.display.set_caption('Dominó!')
 
 ICON = pygame.image.load("assets/DominoIcon.png").convert_alpha()
 pygame.display.set_icon(ICON)
@@ -35,50 +35,51 @@ turn_pos = (625, 6)
 WINDOW.blit(BACKGROUND, (0, 0))
 WINDOW.blit(PLAYER__, PLAYER__pos)
 
-OBJECTS = [] # list yang berisi semua objek yang ada di game
-LAYERS = {0: Layer()} # dictionary yang berisi semua layer yang ada di game
+OBJECTS = []
+LAYERS = {0: Layer()}
 
-PLAYERS = [Player(num) for num in range(PLAYERS_NUM)] # list yang berisi semua pemain yang ada di game
+PLAYERS = [Player(num) for num in range(PLAYERS_NUM)]
 
 #Player
-player = PLAYERS[0] # pemain yang sedang bermain
+player = PLAYERS[0]
 
 #computer
 #PLAYERS[0].change_auto()
-PLAYERS[1].change_auto() # mengubah pemain ke mode komputer
+PLAYERS[1].change_auto()
 #PLAYERS[2].change_auto()
 #PLAYERS[3].change_auto()
 
-FPS = 60 # frame per second
+FPS = 30
 
 
-text_color = (59, 32, 39) # warna teks
-bck_color = (255, 194, 161) # warna background
+text_color = (59, 32, 39)
+bck_color = (255, 194, 161)
 
-# X = WIDTH # lebar window
-# Y = HEIGHT # tinggi window
+X = WIDTH
+Y = HEIGHT
 
 font = pygame.font.Font('assets/alagard.ttf', 32)
 
-GAME_FINISHED_SOUND =  pygame.mixer.Sound('assets/Audio/gameFinished.wav') # suara yang akan diputar ketika game selesai
-EXTRA_DOMINO_SOUND =  pygame.mixer.Sound('assets/Audio/newDomino.wav') # suara yang akan diputar ketika pemain mengambil kartu tambahan
-BUTTOM_SOUND =  pygame.mixer.Sound('assets/Audio/Buttom.wav') # suara yang akan diputar ketika pemain menekan tombol
+GAME_FINISHED_SOUND =  pygame.mixer.Sound('assets/Audio/gameFinished.wav')
+EXTRA_DOMINO_SOUND =  pygame.mixer.Sound('assets/Audio/newDomino.wav')
+BUTTOM_SOUND =  pygame.mixer.Sound('assets/Audio/Buttom.wav')
+
 
 class Table():
-    def __init__(self): # fungsi yang akan dijalankan ketika objek Table dibuat, Table adalah objek yang merepresentasikan meja permainan
-        self.turn = 0 # giliran pemain
-        self.spacing = 95 # jarak antar kartu
-        self.first_game = True # atribut yang menandakan apakah game ini adalah game pertama atau tidak
-        self.dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di game, dtype=object digunakan agar list dapat menyimpan objek diantaranya (string, integer, float, array lain, dll)
-        self.table_dominoes = np.array([], dtype=object) # list yang berisi semua kartu domino yang ada di meja
+    def __init__(self):
+        self.turn = 0
+        self.spacing = 95
+        self.first_game = True
+        self.dominoes = np.array([], dtype=object)
+        self.table_dominoes = np.array([], dtype=object)
 
-        self.left_iterator = 0 # penempatan domino terpilih di sisi kanan domino awal / domino sebelumnya
-        self.right_iterator = 0 # penempatan domino terpilih di sisi kiri domino awal / domino sebelumnya
-        self.left_positions = [] # list yang berisi semua posisi kartu domino yang akan ditaruh di sisi kiri meja
-        self.right_positions = [] # list yang berisi semua posisi kartu domino yang akan ditaruh di sisi kanan meja
+        self.left_iterator = 0
+        self.right_iterator = 0
+        self.left_positions = []
+        self.right_positions = []
 
-        self.last_player = None # pemain yang terakhir kali bermain
-        self.extra_domino = False # atribut yang menandakan apakah pemain mengambil kartu tambahan atau tidak
+        self.last_player = None
+        self.extra_domino = False
         self.extra_dominoes = None
         self.left_arrow_orientation = True
         self.left_arrow = Button("arrow1.png")
@@ -92,10 +93,7 @@ class Table():
     def dominoes_distribution(self):
         for i in range(7):
             for j in range(i, 7):
-                print(f"Domino var in line 149: \ni: {i} | j: {j}")
-                # dibuat instancenya dulu baru dimasukkan ke list 
-                # dan selanjutnya ditampilkan random di line 102 (player.add_domino(self.draw_random()))
-                self.dominoes = np.append(self.dominoes, Domino((i, j))) 
+                self.dominoes = np.append(self.dominoes, Domino((i, j)))
 
         for player in PLAYERS:
             for _ in range(7):
@@ -103,7 +101,6 @@ class Table():
     
     def draw_random(self):
         domino = np.random.choice(self.dominoes)
-        print(f"Domino var in line 150: {domino}")
         self.dominoes = np.delete(self.dominoes, np.where(self.dominoes == domino))
         return domino
     
@@ -123,7 +120,7 @@ class Table():
             y_padding = 160
 
             x, y = 64, 717
-            aux = 1 # aux digunakan untuk menghitung jumlah kartu domino yang sudah ditampilkan
+            aux = 1
 
             for domino in PLAYERS[player_idx].dominoes:
                 if domino not in OBJECTS:
@@ -362,7 +359,7 @@ class Table():
 
             if self.turn == player.num:
                 player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
-                self.extra_x, self.extra_y = turn_x - 46, turn_y - 26
+                self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
                 
                 if self.extra_domino and sprite_added:
                     self.extra_domino_sprite()
@@ -539,7 +536,7 @@ class Table():
         self.create_buttons()
 
         if self.first_game:
-            self.draw_player_interface(player)
+            #self.draw_player_interface(player)
             self.create_right_positions()
             self.create_left_positions()
             self.first_game = False
@@ -869,21 +866,21 @@ def update_layers():
         layer.draw(WINDOW)
 
     pygame.display.flip()
-    # pygame.display.update() 
+    pygame.display.update() 
 
 
 def add_domino_to_layers(domino):
-    if domino not in OBJECTS: # jika domino belum ada di OBJECTS
-        domino.change_orientation_sprite() # memutar sprite domino
-        OBJECTS.append(domino) # menambahkan domino ke OBJECTS
-        domino.in_screen = True # mengubah atribut in_screen menjadi True
-        domino.update() 
+    if domino not in OBJECTS:
+        domino.change_orientation_sprite()
+        OBJECTS.append(domino)
+        domino.in_screen = True
+        domino.update()
 
 
 def domino_sound():
-    dominoNum = random.randint(0, 26) # berguna untuk memilih suara domino yang akan diputar
-    DOMINO_SOUND =  pygame.mixer.Sound(f'assets/Audio/domino{dominoNum}.wav') # memilih suara domino yang akan diputar
-    DOMINO_SOUND.play() # memutar suara domino
+    dominoNum = random.randint(0, 26)
+    DOMINO_SOUND =  pygame.mixer.Sound(f'assets/Audio/domino{dominoNum}.wav')
+    DOMINO_SOUND.play()
 
 
 def run():
@@ -1009,7 +1006,7 @@ def run():
 
     if gameManager.You_Win:
         GAME_FINISHED_SOUND.play()
-        text = font.render(f"Pemain #{gameManager.winner.num + 1} Adalah Pemenang!", True, text_color, bck_color)
+        text = font.render(f"Jugador #{gameManager.winner.num + 1} gano la partida", True, text_color, bck_color)
         
         textRect = text.get_rect()
         textRect.center = (WIDTH // 2, 66)
@@ -1018,7 +1015,7 @@ def run():
 
         y_padding = 120
         for player in PLAYERS:
-            points = font.render(f"Sisa Kartu Pemain #{player.num + 1} : {player.count_tiles()}", True, text_color, bck_color)
+            points = font.render(f"Dominos del jugador #{player.num + 1} en total: {player.count_tiles()}", True, text_color, bck_color)
         
             textRect2 = points.get_rect()
             textRect2.center = (WIDTH // 2, y_padding)
@@ -1043,8 +1040,7 @@ def run():
 
             WINDOW.blit(trancao, textRect3)
 
-        pygame.display.flip()
-        # pygame.display.update()
+        pygame.display.update()
         time.sleep(SLEEP_TIME*24)
 
     OBJECTS, LAYERS = table.repeat_game()
@@ -1053,11 +1049,6 @@ def run():
 
 def intro():
     skip = False
-    # intro = pygame.image.load(f"assets/Dominos (Interface)/Intro/dominoIntro10.png").convert_alpha()
-    # WINDOW.blit(intro, (0, 0)) # (0, 0) adalah posisi x dan y dari gambar intro\
-    # pygame.display.flip()
-    # pygame.display.update()
-
     for i in range(2, 10):
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -1073,11 +1064,11 @@ def intro():
 
         intro = pygame.image.load(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.png").convert_alpha()
             
-        WINDOW.blit(intro, (0, 0)) # (0, 0) adalah posisi x dan y dari gambar intro
+        WINDOW.blit(intro, (0, 0))
         pygame.display.flip()
-        # pygame.display.update()
+        pygame.display.update()
             
-        time.sleep(SLEEP_TIME*0.175)
+        time.sleep(SLEEP_TIME*1.6)
 
     if skip != True:
         time.sleep(SLEEP_TIME*3.6)
@@ -1092,7 +1083,7 @@ def main():
         update_layers()
 
         if last_players_num == PLAYERS_NUM:
-            text = font.render('Poin', True, text_color, bck_color)
+            text = font.render('Puntos', True, text_color, bck_color)
             
             textRect = text.get_rect()
             textRect.center = (WIDTH // 2, 66)
@@ -1101,7 +1092,7 @@ def main():
             y_padding = 100
 
             for player in PLAYERS:
-                points = font.render(f"Pemain #{player.num + 1}: {player.points}", True, text_color, bck_color)
+                points = font.render(f"Jugador #{player.num + 1}: {player.points}", True, text_color, bck_color)
             
                 textRect2 = points.get_rect()
                 textRect2.center = (WIDTH // 2, y_padding)
@@ -1109,8 +1100,7 @@ def main():
 
                 WINDOW.blit(points, textRect2)
 
-            pygame.display.flip()
-            # pygame.display.update()
+            pygame.display.update()
             time.sleep(SLEEP_TIME*24)
 
         if last_players_num != PLAYERS_NUM:
@@ -1173,7 +1163,9 @@ def main():
                     PLAYERS[2].change_auto()
                     PLAYERS[0].change_auto()
         
-        pygame.time.wait(1000)
+        # await asyncio.sleep(0)
+        pygame.display.flip()
+        pygame.display.wait(1000)
 
 
 main()

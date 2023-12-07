@@ -68,7 +68,7 @@ def cube():
 
 
 def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
-    # Draw the button
+    # glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, jenis_texture)
     glPushMatrix()
     # Adjust the coordinates and size of the button
@@ -76,9 +76,21 @@ def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
     glScalef(scaleX, scaleY, 0) 
     cube()
     glPopMatrix()
+    # glDisable(GL_TEXTURE_2D)
+
+def scale_texture(scaleX, scaleY):
+    glPushMatrix()
+    glScalef(scaleX, scaleY, 0)
+    glPopMatrix()
+
+def rotate_texture(angle):
+    glPushMatrix()
+    glRotatef(angle, 0, 0, 1)
+    glPopMatrix()
 
 def load_texture(image_path):
-    print(f"image_path: {image_path}")
+    global width, height
+    # print(f"image_path: {image_path}")
     textureSurface = pygame.image.load(image_path)
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
     width = textureSurface.get_width()
@@ -126,7 +138,7 @@ class GameObject(pygame.sprite.Sprite):
         # Akhir Var baru
         self.blank_path = os.path.join("assets", "Dominos (Interface)", "0.png")
         self.change_vals = False
-
+    
     def load_image(self, path):
         # print(f"path in load_image: {path}")
         self.change_vals = False
@@ -134,43 +146,55 @@ class GameObject(pygame.sprite.Sprite):
         try:
             # self.image = pygame.image.load(path).convert_alpha()
             self.image = load_texture(path)
-            print(f"self.image line 122 inside try except: {self.image}")
+            print(f"self.image line 148 inside try block: {self.image}")
+            display_normal_texture(self.x, self.y, self.x_scale, self.y_scale, self.image)
+            # print(f"self.image line 148 inside try block: {self.image}")
+            # print(f"self.width line 149 inside try block: {self.width}")
         except:
             path = change_vals(path, 22, 24)
             # self.image = pygame.image.load(path).convert_alpha()
             self.image = load_texture(path)
             self.change_vals = True
 
-        print(f"self.image line 130 outside try except: {self.image}")
-        # self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
-        # self.image = pygame.transform.rotate(self.image, self.orientation)
-        # self.rect = self.image.get_rect()
-        self.width = self.image_texture.get_width()
-        self.height = self.image_texture.get_height()
-        # Update the bounding box based on the size of the loaded texture
+        self.width = width
+        self.height = height
+        self.image = scale_texture(self.width*self.x_scale, self.height*self.y_scale)
+        self.image = rotate_texture(self.orientation)
         self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
-        # print(f"image.get_width(): {self.image.get_width()}")
-        # print(f"image.get_height(): {self.image.get_height()}")
-        # print(f"self.rect: {self.rect}")
 
         if self.change_vals:
             self.change_orientation(180)
 
     def update_image(self, path):
         # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        self.image = pygame.image.load(path).convert_alpha()
-        # self.image = load_texture(path)
+        # self.image = pygame.image.load(path).convert_alpha()
+        self.image = load_texture(path)
 
     def refresh_sprite(self):
-        self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
-        self.rect = self.image.get_rect()
+        # self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
+        self.image = scale_texture(self.width*self.x_scale, self.height*self.y_scale)
+        # self.rect = self.image.get_rect()
+        self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
 
     def update(self):
+        # print(f"update in objects.py line 191")
         self.refresh_sprite()
-        self.rect.center = (self.x, self.y) 
+        # self.rect.center = (self.x, self.y)
+        self.x = self.bounding_box.right
+        self.y = self.bounding_box.top
+        # print(f"self.x line 194: {self.x}")
+        # print(f"self.y line 196: {self.y}")
+
+    # def is_colliding(self, position):
+    #     print(f"position in is_colliding line 63 at originalobjects.py: {position}")
+    #     return self.rect.collidepoint(position)
 
     def is_colliding(self, position):
-        return self.rect.collidepoint(position)
+        # position = position/24
+        # print(f"position in is_colliding line 204 at objects.py: {position}")
+        x, y = position
+        return self.bounding_box.left <= x <= self.bounding_box.right and \
+        self.bounding_box.top <= y <= self.bounding_box.bottom
     
     def change_sprite(self, path):
         self.load_image(path)
@@ -188,19 +212,20 @@ class GameObject(pygame.sprite.Sprite):
 
     def add_position(self, x, y):
         self.position = np.array([x, y])
-        # print(f"position in add_position at objects.py: {self.position}")
+        print(f"position in add_position at objects.py: {self.position}")
         self.x = x
         self.y = y
-        # glTranslatef(x, y, 2.5)
-        # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     def change_orientation(self, new_orientation):
         self.orientation = new_orientation
-        self.image = pygame.transform.rotate(self.image, self.orientation)
-        self.rect = self.image.get_rect()
+        # self.image = pygame.transform.rotate(self.image, self.orientation)
+        self.image = rotate_texture(self.orientation)
+        # self.rect = self.image.get_rect()
+        self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
 
     def give_rect(self):
-        return self.rect
+        # return self.rect
+        return self.bounding_box
     
     def give_position(self):
         return self.x, self.y
@@ -235,6 +260,7 @@ class Domino(GameObject):
 
         super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=0, **kwargs)
         self.rect = super().give_rect()
+        print("MASOk LINE 274")
 
     def __copy__(self):
         new_instance = Domino(list(self.vals))
@@ -271,7 +297,7 @@ class Domino(GameObject):
     def domino_placed(self):
         self.placed = True
 
-    def show(self):
+    def show(self): # nampilin domino yang di klik ke tengah layar
         self.in_screen = True
         super().show()
 
@@ -298,13 +324,21 @@ class Domino(GameObject):
     def extra_dominoes_is_empty(self):
         self.empty = True
 
-    def on_hover(self):
-        pixels_to_move = 2
+    def on_hover(self): # on_hover = ketika domino di hover
+        pixels_to_move = 0.5 # pixels to move is the amount of pixels the domino will move when hovered
         self.y -= pixels_to_move
+        print("DI HOVER")
 
-        new_height = self.rect.height + pixels_to_move*2
-        self.rect.height = new_height
-        self.rect.center = (self.x, self.y)
+        
+        bound_height = self.bounding_box.top + (abs(self.bounding_box.bottom))
+        # new_height = self.rect.height + pixels_to_move*2
+        new_height = bound_height + pixels_to_move*2
+        bound_height = new_height
+        # print(f"bound height before + pixels_to_move*2: {bound_height}")
+        # print(f"bound height after + pixels_to_move*2: {bound_height}")
+        # self.rect.center = (self.x, self.y) # IKI DIGANTII LEK WES DIHAPUS YOO KOMEN E 
+        self.x = self.bounding_box.right
+        self.y = self.bounding_box.top
         self.jump = False
 
     def sum_vals(self):
@@ -313,10 +347,8 @@ class Domino(GameObject):
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
-            if self.rect.collidepoint(mouse_position):
-                return True
-            else:
-                return False
+            return self.is_colliding(mouse_position)
+        return False
 
     def __repr__(self):
         return str(list(self.vals))
@@ -339,7 +371,7 @@ class Button(GameObject):
     def change_orientation_sprite(self):
         super().change_orientation(180)
 
-    def activate(self):
+    def show(self):
         self.in_screen = True
         super().show()
 
@@ -357,14 +389,19 @@ class Button(GameObject):
             
         super().update()
 
+    # def click_me(self):
+    #     if self.in_screen:
+    #         mouse_position = pygame.mouse.get_pos()
+    #         if self.rect.collidepoint(mouse_position):
+    #             return True
+    #         else:
+    #             return False
+
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
-            if self.rect.collidepoint(mouse_position):
-                return True
-            else:
-                return False
-
+            return self.is_colliding(mouse_position)
+        return False
 
 class Player:
     def __init__(self, num, manual=True):

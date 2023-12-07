@@ -98,11 +98,11 @@ def display_bg_texture(jenis_texture):
     glScalef(TableXSize, TableYSize, 0)  # Adjust the coordinates and size of the button
     cube()
     glPopMatrix()
-    glDisable(GL_TEXTURE_2D)
+    # glDisable(GL_TEXTURE_2D)
 
 def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
     # Draw the button
-    glEnable(GL_TEXTURE_2D) # KEMUNGKINAN NGEBUG
+    # glEnable(GL_TEXTURE_2D) # KEMUNGKINAN NGEBUG
     glBindTexture(GL_TEXTURE_2D, jenis_texture)
     glPushMatrix()
     # Adjust the coordinates and size of the button
@@ -110,7 +110,7 @@ def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
     glScalef(scaleX, scaleY, 0) 
     cube()
     glPopMatrix()
-    glDisable(GL_TEXTURE_2D)
+    # glDisable(GL_TEXTURE_2D)
 
 def display_init():
     # buat global variabel
@@ -256,11 +256,13 @@ class Table():
     def draw_player_dominoes(self, player_idx):
         if PLAYERS[player_idx].manual:
             # print("TRUE MANUAL MASBRO")
-            x_padding = 0.5
-            y_padding = 0.5
+            x_padding = 2
+            y_padding = 0.75
 
-            x, y = -3.0, -3.6
+            # x, y = -3.0, -3.6
+            x, y = -10.25, -5.25
             aux = 1
+            print(f"aux: {aux}")
 
             for domino in PLAYERS[player_idx].dominoes:
                 # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -275,14 +277,16 @@ class Table():
 
                 if aux == 7:
                     print("aux == 7")
-                    x, y = -3.0, -3.6
+                    # x, y = -3.0, -3.6
+                    x, y = 0, 0
                     y -= y_padding
                     aux = 0
 
-                    y_padding += 0.3
+                    y_padding += 0.5
                 
                 else:
                     x += x_padding
+                    pass
 
                 aux += 1 
 
@@ -295,7 +299,9 @@ class Table():
                     domino.hide()
 
     def draw_extra_dominoes(self):
-        self.extra_dominoes = Domino([7, 7], x=-3.0, y=-3.6)
+        self.extra_dominoes = Domino([7, 7], x=0, y=0)
+        # self.extra_dominoes = Domino([7, 7], x=64, y=717)
+        print(f"self.extra_dominoes line 299: {self.extra_dominoes}")
         OBJECTS.insert(0, self.extra_dominoes)
 
     def hide_extra_dominoes(self):
@@ -306,7 +312,7 @@ class Table():
         return len(self.table_dominoes) == 0
     
     def create_right_positions(self):
-        right_x, right_y = 795, 360
+        right_x, right_y = -3.0, -2.0
 
         self.right_positions.append([right_x, right_y])
         for _ in range(5):
@@ -339,7 +345,7 @@ class Table():
         self.right_positions = np.array(self.right_positions)
 
     def create_left_positions(self):
-        left_x, left_y = 605,360
+        left_x, left_y = -3,0
 
         self.left_positions.append([left_x, left_y])
         for _ in range(5):
@@ -393,7 +399,7 @@ class Table():
             if self.side == "none":
                 self.table_dominoes = np.insert(self.table_dominoes, 0, domino)
                 domino.change_orientation_sprite()
-                domino.add_position(700, 360)
+                domino.add_position(2.5, -4)
 
             if self.side == "left" and domino.vals[1] != self.table_dominoes[0].vals[0] or self.side == "right" and domino.vals[0] != self.table_dominoes[-1].vals[-1]:
                 domino.change_orientation_vals()     
@@ -565,7 +571,7 @@ class Table():
         FULLSCREEN = Button("FULLSCREEN_button1.png")
         EXIT = Button("EXIT_button1.png")
 
-        x, y = 3.8,-4.3
+        x, y = 1,0
         buttons = [PASS, REPEAT, FULLSCREEN, EXIT]
 
         for button in buttons:
@@ -573,7 +579,7 @@ class Table():
             # y += 26
 
         for button in buttons:
-            button.activate()
+            button.show()
             if button not in OBJECTS:
                 OBJECTS.append(button)
 
@@ -1000,23 +1006,23 @@ class MinimaxSolver():
             beta = min(beta, min_utility)
         return min_child, min_utility
 
+    # BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
+    # WINDOW.blit(BACKGROUND, (0, 0))
+    # WINDOW.blit(player_to_play, PLAYER_NUM_pos)
+    # WINDOW.blit(PLAYER__, PLAYER__pos)
+        # WINDOW.blit(can_play, can_play_pos)
+        # WINDOW.blit(turn, turn_pos)
 
 def update_layers(): # fungsi yang akan mengupdate semua layer yang ada di game
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    # BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
     BACKGROUND = load_texture(f"assets/Table({PLAYERS_NUM}).png")
-    # WINDOW.blit(BACKGROUND, (0, 0))
     display_bg_texture(BACKGROUND)
     
-    # WINDOW.blit(player_to_play, PLAYER_NUM_pos)
     display_normal_texture(PLAYER_NUM_pos[0], PLAYER_NUM_pos[1], PLAYER_NUM_scale[0], PLAYER_NUM_scale[1], player_to_play)
-    # WINDOW.blit(PLAYER__, PLAYER__pos)
     display_normal_texture(PLAYER__pos[0], PLAYER__pos[1], PLAYER__scale[0], PLAYER__scale[1], PLAYER__)
 
     try:
-        # WINDOW.blit(can_play, can_play_pos)
         display_normal_texture(can_play_pos[0], can_play_pos[1], can_play)
-        # WINDOW.blit(turn, turn_pos)
         display_normal_texture(turn_pos[0], turn_pos[1], turn)
     except:
         pass
@@ -1030,8 +1036,12 @@ def update_layers(): # fungsi yang akan mengupdate semua layer yang ada di game
         LAYERS[object.layer].add(object)
 
     for _, layer in LAYERS.items():
-        layer.update()
-        layer.draw(WINDOW)
+        # print(f"layer line 1039: {layer}")
+        # layer.update()
+        # layer.draw(WINDOW)
+        for obj in layer.sprites():
+            # print(f"obj line 1043: {obj}")
+            obj.show()  
 
     pygame.display.flip()
     # pygame.display.update() 
@@ -1173,7 +1183,7 @@ def run():
 
         if len(table.dominoes) == 0:
             gameManager.possibility_of_lock_the_game = True
-        
+                        
         update_layers()
 
     if gameManager.You_Win:

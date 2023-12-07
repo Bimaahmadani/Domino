@@ -34,21 +34,14 @@ class GameObject(pygame.sprite.Sprite):
             self.change_vals = True
 
         self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
-        print(f"self.image.get_width(): {self.image.get_width()}")
         self.image = pygame.transform.rotate(self.image, self.orientation)
         self.rect = self.image.get_rect()
-        print(f"self.rect: {self.rect}")
-        # print(f"image.get_width(): {self.image.get_width()}")
-        # print(f"image.get_height(): {self.image.get_height()}")
-        # print(f"self.rect: {self.rect}")
 
         if self.change_vals:
             self.change_orientation(180)
 
     def update_image(self, path):
-        # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         self.image = pygame.image.load(path).convert_alpha()
-        # self.image = load_texture(path)
 
     def refresh_sprite(self):
         self.image = pygame.transform.scale(self.image, (self.image.get_width()*self.x_scale, self.image.get_height()*self.y_scale))
@@ -113,7 +106,7 @@ class Domino(GameObject):
 
         else:
             self.path = f"{vals[0]}-{vals[1]}.png"
-            print(f"path in objects.py line 211: {self.path}")
+            # print(f"path in objects.py line 211: {self.path}")
             self.in_screen = False
 
         super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=0, **kwargs)
@@ -258,7 +251,7 @@ class Player:
         self.num = num
 
     def add_domino(self, domino):
-        print(f"domino onjects 355: {domino}")
+        # print(f"domino onjects 254: {domino}")
         self.dominoes = np.append(self.dominoes, domino)
 
     def remove_all(self):
