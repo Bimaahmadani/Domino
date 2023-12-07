@@ -115,7 +115,8 @@ def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
 def display_init():
     # buat global variabel
     global PLAYERS, WINDOW, WIDTH, HEIGHT, BACKGROUND, PLAYER__, PLAYER__pos, PLAYER_NUM_pos, can_play_pos, turn_pos, player, SLEEP_TIME, PLAYERS_NUM, last_players_num, FPS, text_color, bck_color, font, GAME_FINISHED_SOUND, \
-    EXTRA_DOMINO_SOUND, BUTTOM_SOUND, OBJECTS, LAYERS, PLAYER__scale, PLAYER_NUM_scale
+    EXTRA_DOMINO_SOUND, BUTTOM_SOUND, OBJECTS, LAYERS, PLAYER__scale, PLAYER_NUM_scale, can_play_scale, turn_pos_scale, ICON, FULLSCREEN, EXIT, REPEAT, PASS
+    # IKI AWAS BUGGG
     material_ambient = (0.1, 0.1, 0.1, 1.0)
     material_diffuse = (0.7, 0.7, 0.7, 1.0)
     material_specular = (0.5, 0.5, 0.5, 1)
@@ -160,8 +161,10 @@ def display_init():
     PLAYER__pos = (-9.5, -3.45) # TAk GANTI
     PLAYER_NUM_scale = (0.5, 0.6)
     PLAYER_NUM_pos = (-7.55, -3.45)
-    can_play_pos = (310, 614)
-    turn_pos = (625, 6)
+    can_play_pos = (2, 6.15)
+    can_play_scale = (0.15, 0.15)
+    turn_pos = (0, 6.15)
+    turn_pos_scale = (1.6, 0.5)
 
     # WINDOW.blit(BACKGROUND, (0, 0))
     display_bg_texture(BACKGROUND)
@@ -170,10 +173,8 @@ def display_init():
 
     OBJECTS = [] # list yang berisi semua objek yang ada di game
     LAYERS = {0: Layer()} # dictionary yang berisi semua layer yang ada di game
-    # print(f"LAYERS: {LAYERS}")
 
     PLAYERS = [Player(num) for num in range(PLAYERS_NUM)] # list yang berisi semua pemain yang ada di game
-    # print(f"PLAYERS: {PLAYERS}")
     #Player
     player = PLAYERS[0] # pemain yang sedang bermain
 
@@ -226,7 +227,7 @@ class Table():
         for i in range(7):
             for j in range(i, 7):
                 self.dominoes = np.append(self.dominoes, Domino((i, j)))
-                print(f"self.dominoes: {self.dominoes[-1]}")
+                # print(f"self.dominoes: {self.dominoes[-1]}")
 
         for player in PLAYERS:
             for _ in range(7):
@@ -241,8 +242,7 @@ class Table():
         # extra_domino = pygame.image.load(f"assets/Dominos (Interface)/+.png").convert_alpha()
         extra_domino = load_texture(f"assets/Dominos (Interface)/+.png")
         # WINDOW.blit(extra_domino, (self.extra_x, self.extra_y))
-        # display_normal_texture(self.extra_x, self.extra_y, extra_domino)
-        print(f"line 265:\nself.extra_x: {self.extra_x}, self.extra_y: {self.extra_y}")
+        # print(f"line 265:\nself.extra_x: {self.extra_x}, self.extra_y: {self.extra_y}")
         display_normal_texture(self.extra_x, self.extra_y, 0.30, 0.30, extra_domino)
 
     def draw_player_number(self, player_number):
@@ -256,13 +256,12 @@ class Table():
     def draw_player_dominoes(self, player_idx):
         if PLAYERS[player_idx].manual:
             # print("TRUE MANUAL MASBRO")
-            x_padding = 2
-            y_padding = 0.75
+            x_padding = 1.14
+            y_padding = 1.6
 
             # x, y = -3.0, -3.6
-            x, y = -10.25, -5.25
+            x, y = -10.68, -5.25
             aux = 1
-            print(f"aux: {aux}")
 
             for domino in PLAYERS[player_idx].dominoes:
                 # glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -276,9 +275,9 @@ class Table():
                 domino.show()
 
                 if aux == 7:
-                    print("aux == 7")
+                    # print("aux == 7")
                     # x, y = -3.0, -3.6
-                    x, y = 0, 0
+                    x, y = -10.68, -5.25
                     y -= y_padding
                     aux = 0
 
@@ -299,9 +298,9 @@ class Table():
                     domino.hide()
 
     def draw_extra_dominoes(self):
-        self.extra_dominoes = Domino([7, 7], x=0, y=0)
+        self.extra_dominoes = Domino([7, 7], x=-2.55, y=-5.25) 
         # self.extra_dominoes = Domino([7, 7], x=64, y=717)
-        print(f"self.extra_dominoes line 299: {self.extra_dominoes}")
+        # print(f"self.extra_dominoes line 299: {self.extra_dominoes}")
         OBJECTS.insert(0, self.extra_dominoes)
 
     def hide_extra_dominoes(self):
@@ -571,12 +570,12 @@ class Table():
         FULLSCREEN = Button("FULLSCREEN_button1.png")
         EXIT = Button("EXIT_button1.png")
 
-        x, y = 1,0
+        x, y = -1.71, -4.63
         buttons = [PASS, REPEAT, FULLSCREEN, EXIT]
 
         for button in buttons:
             button.add_position(x, y)
-            # y += 26
+            y -= 0.43
 
         for button in buttons:
             button.show()
@@ -637,7 +636,7 @@ class Table():
                             self.draw_player_dominoes(player_idx)
 
                             if len(self.table_dominoes) < PLAYERS_NUM and PLAYERS[player_idx].first_pick:
-                                print("Son 30!!")
+                                # print("Son 30!!")
                                 
                                 try: PLAYERS[player_idx - 1].add_points(30)
                                 except: PLAYERS[-1].add_points(30)
@@ -1022,8 +1021,8 @@ def update_layers(): # fungsi yang akan mengupdate semua layer yang ada di game
     display_normal_texture(PLAYER__pos[0], PLAYER__pos[1], PLAYER__scale[0], PLAYER__scale[1], PLAYER__)
 
     try:
-        display_normal_texture(can_play_pos[0], can_play_pos[1], can_play)
-        display_normal_texture(turn_pos[0], turn_pos[1], turn)
+        display_normal_texture(can_play_pos[0], can_play_pos[1], can_play_scale[0], can_play_scale[1], can_play)
+        display_normal_texture(turn_pos[0], turn_pos[1], turn_pos_scale[0], turn_pos_scale[1], turn)
     except:
         pass
 

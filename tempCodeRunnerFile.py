@@ -1,1 +1,1 @@
-Player(
+can_play

@@ -1068,7 +1068,7 @@ def intro():
         pygame.display.flip()
         pygame.display.update()
             
-        time.sleep(SLEEP_TIME*1.6)
+        time.sleep(SLEEP_TIME*0.175)
 
     if skip != True:
         time.sleep(SLEEP_TIME*3.6)

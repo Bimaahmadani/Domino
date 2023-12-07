@@ -140,19 +140,13 @@ class GameObject(pygame.sprite.Sprite):
         self.change_vals = False
     
     def load_image(self, path):
-        # print(f"path in load_image: {path}")
         self.change_vals = False
 
         try:
-            # self.image = pygame.image.load(path).convert_alpha()
             self.image = load_texture(path)
-            print(f"self.image line 148 inside try block: {self.image}")
             display_normal_texture(self.x, self.y, self.x_scale, self.y_scale, self.image)
-            # print(f"self.image line 148 inside try block: {self.image}")
-            # print(f"self.width line 149 inside try block: {self.width}")
         except:
             path = change_vals(path, 22, 24)
-            # self.image = pygame.image.load(path).convert_alpha()
             self.image = load_texture(path)
             self.change_vals = True
 
@@ -177,22 +171,15 @@ class GameObject(pygame.sprite.Sprite):
         self.bounding_box = BoundingBox(-self.width / 2, self.width / 2, -self.height / 2, self.height / 2)
 
     def update(self):
-        # print(f"update in objects.py line 191")
         self.refresh_sprite()
         # self.rect.center = (self.x, self.y)
         self.x = self.bounding_box.right
         self.y = self.bounding_box.top
-        # print(f"self.x line 194: {self.x}")
-        # print(f"self.y line 196: {self.y}")
-
-    # def is_colliding(self, position):
-    #     print(f"position in is_colliding line 63 at originalobjects.py: {position}")
-    #     return self.rect.collidepoint(position)
 
     def is_colliding(self, position):
-        # position = position/24
         # print(f"position in is_colliding line 204 at objects.py: {position}")
         x, y = position
+        print(f"position in is_colliding at objects.py: {position}")
         return self.bounding_box.left <= x <= self.bounding_box.right and \
         self.bounding_box.top <= y <= self.bounding_box.bottom
     
@@ -258,9 +245,8 @@ class Domino(GameObject):
             # print(f"path in objects.py line 211: {self.path}")
             self.in_screen = False
 
-        super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=1, y_scale=1, orientation=0, **kwargs)
+        super().__init__(img_path=os.path.join("assets", "Dominos (Game)", self.path), x_scale=0.46, y_scale=0.78, orientation=0, **kwargs)
         self.rect = super().give_rect()
-        print("MASOk LINE 274")
 
     def __copy__(self):
         new_instance = Domino(list(self.vals))
@@ -328,7 +314,6 @@ class Domino(GameObject):
         pixels_to_move = 0.5 # pixels to move is the amount of pixels the domino will move when hovered
         self.y -= pixels_to_move
         print("DI HOVER")
-
         
         bound_height = self.bounding_box.top + (abs(self.bounding_box.bottom))
         # new_height = self.rect.height + pixels_to_move*2
@@ -362,7 +347,7 @@ class Button(GameObject):
         self.position = None
         self.in_screen = False
 
-        super().__init__(img_path=os.path.join("assets", "Dominos (Interface)", self.path1), x_scale=1, y_scale=1, orientation=0)
+        super().__init__(img_path=os.path.join("assets", "Dominos (Interface)", self.path1), x_scale=0.17, y_scale=0.17, orientation=0)
         self.rect = super().give_rect()
 
     def add_position(self, x, y):
@@ -400,6 +385,7 @@ class Button(GameObject):
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
+            print(f"mouse_position: {mouse_position}")
             return self.is_colliding(mouse_position)
         return False
 

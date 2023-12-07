@@ -52,6 +52,7 @@ class GameObject(pygame.sprite.Sprite):
         self.rect.center = (self.x, self.y) 
 
     def is_colliding(self, position):
+        # print(f"position in is_colliding at originalobjects.py: {position}")
         return self.rect.collidepoint(position)
     
     def change_sprite(self, path):
@@ -190,8 +191,10 @@ class Domino(GameObject):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
             if self.rect.collidepoint(mouse_position):
+                print("domino originalobjects.py clicked!")
                 return True
             else:
+                print("domino originalobjects.py not clicked!")
                 return False
 
     def __repr__(self):
@@ -236,9 +239,12 @@ class Button(GameObject):
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
+            print(f"mouse_position: {mouse_position}")
             if self.rect.collidepoint(mouse_position):
+                print("button originalobjects.py clicked!")
                 return True
             else:
+                print("button originalobjects.py not clicked!")
                 return False
 
 
