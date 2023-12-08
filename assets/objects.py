@@ -43,6 +43,21 @@ def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
     glPopMatrix()
     # glDisable(GL_TEXTURE_2D)
 
+def convert_to_glCoord(pygame_pos):
+    # pygame_width, pygame_height = pygame.display.get_surface().get_size()
+    # opengl_width, opengl_height = WIDTH, HEIGHT
+
+    # Convert Pygame coordinates to PyOpenGL coordinates
+    center_x = WIDTH / 2
+    center_y = HEIGHT / 2
+
+    # Convert Pygame coordinates to PyOpenGL coordinates
+    x_opengl = (pygame_pos[0] - center_x) / center_x
+    y_opengl = (center_y - pygame_pos[1]) / center_y
+
+    return x_opengl, y_opengl
+
+
 
 class BoundingBox:
     # BoundingBox class for representing a rectangular bounding box
@@ -119,7 +134,9 @@ class GameObject(pygame.sprite.Sprite):
     def is_colliding(self, position):
         # print(f"position in is_colliding line 204 at objects.py: {position}")
         x, y = position
+        converted_to_glCoord = convert_to_glCoord(position)
         print(f"position in is_colliding at objects.py: {position}")
+        print(f"converted_to_glCoord in is_colliding at objects.py: {converted_to_glCoord}")
         return self.bounding_box.left <= x <= self.bounding_box.right and \
         self.bounding_box.top <= y <= self.bounding_box.bottom
     
@@ -325,7 +342,9 @@ class Button(GameObject):
     def click_me(self):
         if self.in_screen:
             mouse_position = pygame.mouse.get_pos()
-            print(f"mouse_position: {mouse_position}")
+            print(f"mouse_position pygame: {mouse_position}")
+            opengl_mouse_pos = convert_to_glCoord(mouse_position)
+            print(f"mouse_position openGL: {opengl_mouse_pos}")
             return self.is_colliding(mouse_position)
         return False
 

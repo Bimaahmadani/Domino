@@ -11,6 +11,7 @@ import time
 import sys
 
 
+# digunakan untuk memproses gambar menjadi texture
 def load_texture(image_path):
     textureSurface = pygame.image.load(image_path)
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
@@ -24,6 +25,7 @@ def load_texture(image_path):
 
     return texture
 
+# digunakan untuk menampilkan texture KHUSUS BACKGROUND
 def display_bg_texture(jenis_texture):
     global TableXSize, TableYSize
     glEnable(GL_TEXTURE_2D)
@@ -38,6 +40,7 @@ def display_bg_texture(jenis_texture):
     glPopMatrix()
     # glDisable(GL_TEXTURE_2D)
 
+# digunakan untuk menampilkan semua texture selain BACKGROUND
 def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
     # Draw the button
     # glEnable(GL_TEXTURE_2D) # KEMUNGKINAN NGEBUG
@@ -50,6 +53,7 @@ def display_normal_texture(posX, posY, scaleX, scaleY, jenis_texture):
     glPopMatrix()
     # glDisable(GL_TEXTURE_2D)
 
+# digunakan untuk men-setting layar + variabel-variable yang dibutuhkan
 def display_init():
     # buat global variabel
     global PLAYERS, WINDOW, WIDTH, HEIGHT, BACKGROUND, PLAYER__, PLAYER__pos, PLAYER_NUM_pos, can_play_pos, turn_pos, player, SLEEP_TIME, PLAYERS_NUM, last_players_num, FPS, text_color, bck_color, font, GAME_FINISHED_SOUND, \
@@ -88,11 +92,9 @@ def display_init():
     PLAYERS_NUM = 2
     last_players_num = PLAYERS_NUM
 
-    # BACKGROUND = pygame.image.load(f"assets/Table({PLAYERS_NUM}).png").convert_alpha()
-    BACKGROUND = load_texture(f"assets/Table({PLAYERS_NUM}).png")
+    BACKGROUND = load_texture(f"assets/Table({PLAYERS_NUM}).png") # PRoses gambar bg menjadi texture
 
-    # PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert_alpha()
-    PLAYER__ = load_texture(f"assets/Dominos (Interface)/jugador#.png")
+    PLAYER__ = load_texture(f"assets/Dominos (Interface)/jugador#.png") # PRoses gambar player menjadi texture
 
     SLEEP_TIME = .16
     PLAYER__scale = (1.4, 0.6)
