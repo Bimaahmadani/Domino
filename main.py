@@ -64,7 +64,7 @@ def display_init():
     WINDOW = pygame.display.set_mode(screen_size, DOUBLEBUF | OPENGL)
     
 
-    pygame.display.set_caption('TheMino: Ordinary Domino Game')
+    pygame.display.set_caption('Domino Crush : By Student of Malang University')
     glEnable(GL_DEPTH_TEST)
     glEnable(GL_COLOR_MATERIAL)
     glEnable(GL_LIGHTING)
@@ -92,11 +92,11 @@ def display_init():
     BACKGROUND = load_texture(f"assets/Table({PLAYERS_NUM}).png")
 
     # PLAYER__ = pygame.image.load(f"assets/Dominos (Interface)/jugador#.png").convert_alpha()
-    PLAYER__ = load_texture(f"assets/Dominos (Interface)/jugador#.png")
+    PLAYER__ = load_texture(f"assets/Dominos (Interface)/pemain#.jpg")
 
     SLEEP_TIME = .16
-    PLAYER__scale = (1.4, 0.6)
-    PLAYER__pos = (-9.5, -3.45) # TAk GANTI
+    PLAYER__scale = (1.6, 0.5)
+    PLAYER__pos = (-9.6, -3.45) # TAk GANTI
     PLAYER_NUM_scale = (0.5, 0.6)
     PLAYER_NUM_pos = (-7.55, -3.45)
     can_play_pos = (2, 6.15)
@@ -186,7 +186,7 @@ class Table():
     def draw_player_number(self, player_number):
         global player_to_play
         # player_to_play = pygame.image.load(f"assets/Dominos (Interface)/{player_number + 1}p.png").convert_alpha()
-        player_to_play = load_texture(f"assets/Dominos (Interface)/{player_number + 1}p.png")
+        player_to_play = load_texture(f"assets/Dominos (Interface)/{player_number + 1}d.jpg")
         # WINDOW.blit(player_to_play, PLAYER_NUM_pos)
         display_normal_texture(PLAYER_NUM_pos[0], PLAYER_NUM_pos[1], PLAYER_NUM_scale[0], PLAYER_NUM_scale[1], player_to_play)
         update_layers()
@@ -448,11 +448,11 @@ class Table():
             # num_dominoes = pygame.image.load(f"assets/Dominos (Interface)/{dominoes_amount}.png").convert_alpha()
             num_dominoes = load_texture(f"assets/Dominos (Interface)/{dominoes_amount}.png")
             # player_num = pygame.image.load(f"assets/Dominos (Interface)/{player.num + 1}p.png").convert_alpha()
-            player_num = load_texture(f"assets/Dominos (Interface)/{player.num + 1}p.png")
+            player_num = load_texture(f"assets/Dominos (Interface)/{player.num + 1}c.jpg")
 
             if self.turn == player.num:
-                # player_turn = pygame.image.load(f"assets/Dominos (Interface)/turn.png").convert_alpha()
-                player_turn = load_texture(f"assets/Dominos (Interface)/turn.png")
+                # player_turn = pygame.image.load(f"assets/Dominos (Interface)/turnarrow.jpg").convert_alpha()
+                player_turn = load_texture(f"assets/Dominos (Interface)/turnarrow.jpg")
                 # self.extra_x, self.extra_y = turn_x - 46, turn_y - 6
                 self.extra_x, self.extra_y = turn_x-1.1, turn_y+1.45
                 
@@ -1039,7 +1039,7 @@ def run():
 
         if PLAYERS[TURN].manual:
             # turn = pygame.image.load(f"assets/Dominos (Interface)/Tu Turno.png").convert_alpha()
-            turn = load_texture(f"assets/Dominos (Interface)/Tu Turno.png")
+            turn = load_texture(f"assets/Dominos (Interface)/giliranmu.jpg")
             played = table.player_plays(TURN)
             # turn = pygame.image.load(f"assets/Dominos (Interface)/0.png").convert_alpha()
             turn = load_texture(f"assets/Dominos (Interface)/0.png")
@@ -1185,7 +1185,7 @@ def intro():
 
         # intro = pygame.image.load(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.png").convert_alpha()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        intro = load_texture(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.png")
+        intro = load_texture(f"assets/Dominos (Interface)/Intro/dominoIntro{i}.jpg")
             
         # WINDOW.blit(intro, (0, 0)) # (0, 0) adalah posisi x dan y dari gambar intro
         display_bg_texture(intro)
